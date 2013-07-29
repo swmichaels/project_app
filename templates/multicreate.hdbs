@@ -1,0 +1,36 @@
+<section data-main>
+	<div id='createtheticket'>
+		<ol>
+			<li>
+          <label for="userEmail">Requester</label>
+           <input type="email" required placeholder="me@example.com" name="userEmail" id="userEmail" style="width: 196px" value="{{email}}"/>
+      </li>
+      <li style="display: none;">
+          <label for="userName">Reqester Name</label>
+           <input type="text" required placeholder="Requester Name" name="userName" id="userName" style="width: 196px;" value=""/>
+      </li>
+			<li>
+			<div class="select" required = "required">
+			    <label for="zendeskSelect">Groups</label>
+			     <select id="zendeskSelect" required name="zendeskSelect" onchange style="width: auto;" size="1" multiple>
+					  {{#each groups}}
+			          <option value="{{value}}">{{label}}</option>
+					  {{/each}}
+			     </select>
+			</li>
+			<li>
+			    <label for="userSub">Subject</label>
+					  <!-- <span STYLE="color: green; font-size: 10pt">Required</span> -->
+			     <input required placeholder="Enter Subject" type="text" name="userSub" id="userSub" style="width: 196px" value="{{subject}}"/>
+			</li>
+			
+			<li>
+        <label>Description<textarea required="required" rows="10" name="ticketDesc" id="ticketDesc" style="width: 196px" placeholder="Please Describe the issue">{{desc}}</textarea></label>  
+			</li>
+		<li>
+	   <button class='submitSpoke ember-view btn'>Create Bulk Tickets</button>
+     </li>
+	   </ol>
+	   </div>
+   </div>
+</section>

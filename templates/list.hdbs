@@ -1,0 +1,35 @@
+<section data-main>
+<div>
+   <table class="table table-condensed">
+    {{#each projects}}
+    {{#selected}}
+    <h5>Parent</h5>
+    <table class="table table-condensed">
+      <tbody>
+        <tr class="_tooltip" data-title="Type: {{type}} Assignee: {{assignee_id}} Group: {{group_id}}">
+          <td><a href="#/tickets/{{id}}"><b>#{{id}}</b> {{subject}}</a></td>
+          <td><b>Status:</b> {{status}}</td>
+        </tr>
+    {{/selected}}
+    {{/each}}
+      <tbody>
+    </table>
+    <h5>Children</h5>
+    {{#each projects}}
+    {{^selected}}
+    <table class="table table-condensed">
+      <tbody>
+        <tr class="_tooltip" data-title="Type: {{type}} Assignee: {{assignee_id}} Group: {{group_id}}">
+          <td><a href="#/tickets/{{id}}"><b>#{{id}}</b> {{subject}}</a></td>
+          <td><b>Status:</b> {{status}}</td>
+        </tr>
+    {{/selected}}
+    {{/each}}
+      <tbody>
+    </table>
+  {{#unless projects.length}}
+    <p>{{t "none"}}}</p>
+  {{/unless}}
+
+</div>
+</section>

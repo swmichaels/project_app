@@ -1,0 +1,5 @@
+<section data-main>
+  {{#createResult}}
+<div><a href="#/tickets/{{id}}"><b>#{{id}}</b></a> was created with {{external_id}}</div>
+  {{/createResult}}
+</section>
