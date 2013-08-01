@@ -73,14 +73,16 @@
         dataType: 'JSON',
         type: 'POST',
         contentType: 'application/json',
-        data: childCall
+        data: childCall,
+        proxy_v2: true
         };
       },
       getGroups : function(page){
         return {
           url: '/api/v2/groups.json?page=' + page,
           dataType: 'JSON',
-          type: 'GET'
+          type: 'GET',
+          proxy_v2: true
         };
       },
       putExternalID: function(data, id) {
@@ -89,7 +91,8 @@
           dataType: 'JSON',
           type: 'PUT',
           contentType: 'application/json',
-          data: data
+          data: data,
+          proxy_v2: true
         };
       },
       getExternalID: function(ticket) {
@@ -97,13 +100,15 @@
           url: '/api/v2/tickets/' + ticket +'.json',
           dataType: 'JSON',
           type: 'GET',
-          contentType: 'application/json'
+          contentType: 'application/json',
+          proxy_v2: true
         };
       },
       autocompleteRequester: function(email){
         return {
           url: '/api/v2/users/autocomplete.json?name=' + email,
-          type: 'POST'
+          type: 'POST',
+          proxy_v2: true
         };
       },
       searchExternalID: function(data, page) {
@@ -111,14 +116,16 @@
           url: '/api/v2/search.json?page=' + page + '&per_page=50&query=type:ticket+external_id:'+ data,
           dataType: 'JSON',
           type: 'GET',
-          contentType: 'application/json'
+          contentType: 'application/json',
+          proxy_v2: true
         };
       },
 			getAgents: function(page) {
 				return {
           url: '/api/v2/users.json?page=' + page + '&role%5B%5D=4&role%5B%5D=2',
           dataType: 'JSON',
-          type: 'GET'
+          type: 'GET',
+          proxy_v2: true
 				};
 			}
     }, //end requests
