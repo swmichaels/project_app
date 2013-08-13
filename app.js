@@ -62,8 +62,14 @@
     'click .displayUpdate': 'switchToUpdate',
     'click .updateticket': 'updateTickets',
     'click .removeTicket': 'removeFrom',
-    'ticket.status.changed': function() {
-      //console.log(this.isSolvable);
+    'ticket.save': function() {
+      var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
+      if(hasProjectChildTag){
+        return true;
+      }
+      if(!this.isSolvable && this.ticket().status() === 'solved'){
+        return false;
+      }
     }
   }, //end events
   requests: {
