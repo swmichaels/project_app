@@ -61,16 +61,7 @@
 		'getAgents.done': 'processAgents',
     'click .displayUpdate': 'switchToUpdate',
     'click .updateticket': 'updateTickets',
-    'click .removeTicket': 'removeFrom',
-    'ticket.save': function() {
-      var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
-      if(hasProjectChildTag){
-        return true;
-      }
-      if(!this.isSolvable && this.ticket().status() === 'solved'){
-        return false;
-      }
-    }
+    'click .removeTicket': 'removeFrom'
   }, //end events
   requests: {
     createTicket: function(childCall) {
@@ -283,6 +274,7 @@
     this.switchTo('list', {
       projects: this.ticketList
     });
+    this.parentSolve();
     //hide the remove button in the template if not child ticket
     this.$('button.removeTicket').hide();
     this.$('button.displayList').hide();
@@ -294,6 +286,18 @@
       this.$('button.displayMultiCreate').hide();
       this.$('button.displayUpdate').hide();
       this.$('button.removeTicket').show();
+    }
+  },
+  parentSolve: function() {
+    //enable solve and if this.isSolvavle is false disable solve
+    this.ticketFields('status').options('solved').enable();
+    //if this is a child ticket stop and exit function 
+    var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
+    if(hasProjectChildTag){
+      return true;
+    }
+    if(!this.isSolvable){
+      this.ticketFields('status').options('solved').disable();
     }
   },
   getGroupsData: function(page){
