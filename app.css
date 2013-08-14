@@ -30,3 +30,6 @@
     /* prevent horizontal scrollbar */
     overflow-x: hidden;
   }
+  .displayList, .displayForm, .displayMultiCreate, .displayUpdate, .removeTicket {
+    display: none;
+  }

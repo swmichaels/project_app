@@ -31,7 +31,7 @@
   };
     return {
     appID:  'https://github.com/zendesk/widgets/tree/master/ProjectApp',
-    defaultState: 'list',
+    defaultState: 'noproject',
     name: '',
     prependSubject: '',
     appendSubject: '',
@@ -52,6 +52,7 @@
        this.listProjects(data || {});
       },
     'click .submitSpoke': 'createTicketValues',
+    'click .makeproj': 'listProjects',
     'click .submitBulk': 'createBulkTickets',
     'createTicket.done': 'processData',
     'click .displayForm': 'switchToReqester',
@@ -252,12 +253,10 @@
     }
   }, 
   findProjects: function(data){
-    if (data.ticket.external_id !== "") {
+    var thereAreNulls = [undefined, null, ''];
+    var isNotEmpty = (_.indexOf(thereAreNulls, data.ticket.external_id) === -1);
+    if (isNotEmpty) {
       this.getProjectSearch(data.ticket.external_id, 1);
-    } else {
-      var broken = {};
-      broken.results = {};
-      this.listProjects(broken);
     }
   },
   getProjectSearch: function (externalID, page) {
@@ -266,10 +265,14 @@
   listProjects: function(data){
 		this.ticketList = [];
     var nextPage = 1;
-    _.each(data.tickets, buildTicketList, this);
-    if (data.next_page !== null){
-      nextPage = nextPage + 1;
-      this.getProjectSearch(data.ticket[0].external_id, nextPage);
+    var btnClicked = (data.type === 'click');
+    console.log(btnClicked);
+    if(!btnClicked){
+      _.each(data.tickets, buildTicketList, this);
+      if (data.next_page !== null){
+        nextPage = nextPage + 1;
+        this.getProjectSearch(data.ticket[0].external_id, nextPage);
+      }
     }
     this.switchTo('list', {
       projects: this.ticketList
@@ -280,6 +283,7 @@
     this.$('button.displayList').hide();
     this.$('button.displayForm').show();
     this.$('button.displayMultiCreate').show();
+    this.$('button.displayUpdate').show();
     //if the current ticket is a child hide the create buttons in the template and show the remove
     if (_.indexOf(this.ticket().tags(), 'project_child') !== -1) {
       this.$('button.displayForm').hide();
