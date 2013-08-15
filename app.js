@@ -391,7 +391,7 @@
     var ticketTags = tags;
     var isParent = (_.indexOf(ticketTags, 'project_parent') !== -1);
     var ticketUpdateID;
-    //var updateTicket = {};
+    var updateTicket = {};
     if (_.isObject(data)) {
       ticketUpdateID = data.ticket.id;
     } else {
