@@ -1,6 +1,6 @@
 (function(){
   //build a group object for looking up a group name from id
-  var buildGroupList = function(item){ 
+  var buildGroupList = function(item){
     this.groups[item.id] = item.name;
     //build an array for the ticket submit pages to create dropdown list
     this.groupDrop.push({'label': '' + item.name + '', 'value': ''+ item.id +''});
@@ -21,13 +21,16 @@
       //if the ticket is a child ticket set the selected to false
       list.selected = !hasProjectChildTag;
     } else {
-      // selected is true if the ticket is the parent 
+      // selected is true if the ticket is the parent
       list.selected = true;
     }
     this.ticketList.push(list);
   };
   var displayProjectName = function() {
     return this.settings.Custom_Field_ID;
+  };
+  var buildTicketFormList = function(item){
+    this.ticketForms[item.id] = item.ticket_field_ids;
   };
     return {
     appID:  'https://github.com/zendesk/widgets/tree/master/ProjectApp',
@@ -37,6 +40,7 @@
     appendSubject: '',
     groups: {},
 		assignees: {},
+    ticketForms: {},
 		groupDrop: [],
     ticketList: [],
     createResultsData: [],
@@ -46,7 +50,7 @@
     MAX_ATTEMPTS : 20,
     events: {
     'app.activated': 'init',
-    'requiredProperties.ready': 'getProjectData',
+    // 'requiredProperties.ready': 'getProjectData',
     'getExternalID.done': 'findProjects',
     'searchExternalID.done': function(data) {
        this.listProjects(data || {});
@@ -70,7 +74,9 @@
       if(!this.isSolvable && this.ticket().status() === 'solved'){
         return false;
       }
-    }
+    },
+    'getTicketForms.done': 'processTicketForms'
+
   }, //end events
   requests: {
     createTicket: function(childCall) {
@@ -133,19 +139,50 @@
           type: 'GET',
           proxy_v2: true
 				};
-			}
+			},
+
+      getTicketForms: function() {
+        return {
+          url: '/api/v2/ticket_forms.json',
+          dataType: 'JSON',
+          type: 'GET',
+          proxy_v2: true
+        };
+      }
     }, //end requests
+
   init: function() {
-      this.requiredProperties = ['ticket.requester.email', 'custom_field_' + this.settings.Custom_Field_ID, 'ticket.id'];
+      // aa - adding checks
+      // var ticketFormID = this.ticket().form().id();
+      // console.log("aa-- init() : current ticketFormID =", ticketFormID);
+
+      // var thereAreNulls = [undefined, null, ''];
+      // console.log ("aa-- _.indexOf(thereAreNulls, ticketFormID) =", _.indexOf(thereAreNulls, ticketFormID));
+
+      // if (_.indexOf(thereAreNulls, ticketFormID) == -1) {
+      //   console.log ("aa-- ticketFormID is defined, go ahead and get ticket fields in this form");
+      //   this.ajax ('getTicketFields', ticketFormID);
+      // }
+      // else {
+      //   console.log ("aa-- init() : not getting ticket fields because ticketFormID =", ticketFormID);
+      // }
+
+      console.log("aa-- init() : this.ticket().form().id() =", this.ticket().form().id());
+      // get all TicketForms in the system
+      this.getTicketFormData(1);
+      console.log ("aa-- in init: this.ticketForms =", this.ticketForms);
+
+      this.requiredProperties = ['ticket.requester.email', 'custom_field_' + this.settings.Custom_Field_ID, 'ticket.id', 'ticket.form.id'];
       this.allRequiredPropertiesExist();
     },
+
   processData: function(data, response, responseText) {
     this.ticket().tags().add(['project_parent', 'project_'+this.ticket().id()]);
     this.ticket().customField('custom_field_' + displayProjectName.call(this) +'', 'Project-' + this.ticket().id());
     this.createResultsData.push({'id': '' + data.ticket.id + '', 'external_id': '' + data.ticket.external_id + ''});
     this.switchTo('description', {
       createResult: this.createResultsData
-    }); 
+    });
   },
   autocompleteRequesterEmail: function(){
     var self = this;
@@ -215,12 +252,12 @@
         //ticket.external_id('Project-' + ticket.id());
     var currentTags = this.ticket().tags();
     this.putTicketData(currentTags, 'project_parent', 'add', ticket.id());
-    
+
   },
   switchToReqester: function() {
     var newSubject = this.ticket().subject();
     if (this.prependSubject) {
-      newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject; 
+      newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
     }
     if (this.appendSubject) {
       newSubject = newSubject + ' Project-' + this.ticket().id();
@@ -238,10 +275,11 @@
     this.autocompleteGroup();
   },
   getProjectData: function(data) {
-      //get all the groups   
+      //get all the groups
       this.getGroupsData(1);
       //get all the agents in the system V2 API
       this.getAgentData(1);
+
     this.prependSubject = this.settings.prependSubject;
     this.appendSubject = this.settings.appendSubject;
     //get the exteranl API on the currently viewed ticket
@@ -249,17 +287,47 @@
     //get the value of the Project ticket field
     var projectField = displayProjectName.call(this);
     //build array of all possible types of empty return values
-    var thereAreNulls = [undefined, null, ''];
-    //check to see if the field is there, if it’s there is it empty. 
-    var isNotEmpty = (_.indexOf(thereAreNulls, this.ticket().customField('custom_field_' + projectField +'')) === -1);
-    if (isNotEmpty){
-      //if the field contains a value disable editing of the field
-      this.ticketFields('custom_field_' + projectField +'').disable();
-    } else {
-      //if it’s not returned or empty hide the field
-      this.ticketFields('custom_field_' + projectField +'').hide();
+
+    // aa -- adding checks for existence for project app custom field ID in current form ...
+    // note: assuming ticket form ID exist by now
+    // var ticketFormID = this.ticket().form().id();
+          // var ticketFormID = 123456;
+          // console.log ("aa-- hard coding ticketFormID =", ticketFormID);
+
+    console.log ("aa-- this.settings.Custom_Field_ID =", this.settings.Custom_Field_ID);
+
+          // this.ticketForms[ticketFormID] = [1, 2, 3, 4, 5, 6, 7, 23028736];
+          // console.log ("aa-- hard coding this.ticketForms[123456] =", this.ticketForms[123456]);
+
+    // console.log ("aa-- this.ticketForms[32033] =", this.ticketForms[32033]);
+
+    var ticketFormID = this.ticket().form().id();
+
+    debugger;
+
+    if ( _.indexOf(this.ticketForms[ticketFormID], this.settings.Custom_Field_ID) !== -1 ) {
+    // if ( _.indexOf(this.ticketForms[32033], this.settings.Custom_Field_ID) !== -1 ) {
+      // project name custom field ID shows up in current ticket form
+      // go ahead and proceed withfurther checks
+
+      var thereAreNulls = [undefined, null, ''];
+      //check to see if the field is there, if it’s there is it empty.
+      var isNotEmpty = (_.indexOf(thereAreNulls, this.ticket().customField('custom_field_' + projectField +'')) === -1);
+
+      if (isNotEmpty){
+        //if the field contains a value disable editing of the field
+        this.ticketFields('custom_field_' + projectField +'').disable();
+      } else {
+        //if it’s not returned or empty hide the field
+        this.ticketFields('custom_field_' + projectField +'').hide();
+      }
     }
-  }, 
+    else {
+      // project name custom field ID does not show up in current ticket form
+      console.log ("aa-- project name custom field does not exist in current form; exiting ...");
+      return;
+    }
+  },
   findProjects: function(data){
     if (data.ticket.external_id !== "") {
       this.getProjectSearch(data.ticket.external_id, 1);
@@ -320,6 +388,24 @@
       this.getAgentData(nextPage);
     }
 	},
+
+  getTicketFormData: function(page){
+     if ( page === 1 && Object.keys(this.ticketForms).length > 0 ) { return; }
+     this.ajax('getTicketForms', page);
+  },
+
+  processTicketForms: function(data) {
+    console.log ("aa-- in processTicketForms, data = ", data);
+    var nextPage = 1;
+    _.each(data.ticket_forms, buildTicketFormList, this);
+    if (data.next_page !== null){
+      nextPage = nextPage + 1;
+      this.getTicketFormData(nextPage);
+    } else {
+      this.getProjectData();
+    }
+  },
+
 	updateList: function() {
     this.ajax('getExternalID', this.ticket().id());
 	},
@@ -349,13 +435,13 @@
   },
   switchToUpdate: function() {
     this.switchTo('updatetickets',{
-      
+
     });
   },
   updateTickets: function() {
     var re = /,|\s/;
     var list = this.$('#listofIDs').val().split(re);
-    //update the the current ticket 
+    //update the the current ticket
     var currentTags = this.ticket().tags();
     this.putTicketData(currentTags, 'project_parent', 'add', this.ticket().id());
     //get the list supplied and update the ticket.
@@ -390,45 +476,48 @@
       ticketUpdateID = data.ticket.id;
     } else {
       ticketUpdateID =  data;
-    } 
+    }
     updateTicket.ticket = {};
     updateTicket.ticket.custom_fields = {};
     console.log(this.settings.Custom_Field_ID);
     if (!isParent && type === 'add') {
       ticketTags.push(linking, 'project_'+ this.ticket().id());
 
-      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id(); 
+      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id();
       updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
     } else if (!isParent && type === 'remove') {
       var projectTag = data.ticket.external_id.replace(/-/i, '_').toLowerCase();
       ticketTags.splice(_.indexOf(tags, "project_child"),1);
       ticketTags.splice(_.indexOf(tags, projectTag),1);
-      updateTicket.ticket.custom_fields[ displayProjectName.call(this) ] = ''; 
+      updateTicket.ticket.custom_fields[ displayProjectName.call(this) ] = '';
       updateTicket.ticket.external_id = '';
     } else {
       ticketTags.push(linking, 'project_'+ this.ticket().id());
-      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id(); 
+      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id();
       updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
-    }        
+    }
     updateTicket.ticket.tags = ticketTags;
     var thisTicket = JSON.stringify(updateTicket);
     this.ajax('putExternalID', thisTicket, ticketUpdateID);
-   
+
   },
+
+
   // HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS
     allRequiredPropertiesExist: function() {
       if (this.requiredProperties.length > 0) {
+        console.log ("aa-- this.requiredProperties[0] =", this.requiredProperties[0]);
         var valid = this.validateRequiredProperty(this.requiredProperties[0]);
         // prop is valid, remove from array
         if (valid) {
           this.requiredProperties.shift();
         }
- 
+        console.log ("aa-- this.currAttempt =", this.currAttempt);
         if (this.requiredProperties.length > 0 && this.currAttempt < this.MAX_ATTEMPTS) {
           if (!valid) {
             ++this.currAttempt;
           }
- 
+
           _.delay(_.bind(this.allRequiredPropertiesExist, this), 100);
           return;
         }
@@ -436,10 +525,10 @@
       if (this.currAttempt < this.MAX_ATTEMPTS) {
         this.trigger('requiredProperties.ready');
       } else {
-        this.services.notify(this.I18n.t('errors.data'));
+        services.notify("error in allRequiredPropertiesExist!");
       }
     },
- 
+
     safeGetPath: function(propertyPath) {
       return _.inject( propertyPath.split('.'), function(context, segment) {
         if (context == null) { return context; }
@@ -448,7 +537,7 @@
         return obj;
       }, this);
     },
-  
+
     validateRequiredProperty: function(propertyPath) {
       if (propertyPath.match(/custom_field/)) { return !!this.ticketFields(propertyPath); }
       var value = this.safeGetPath(propertyPath);
