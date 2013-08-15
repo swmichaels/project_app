@@ -26,9 +26,6 @@
     }
     this.ticketList.push(list);
   };
-  var displayProjectName = function() {
-    return this.settings.Custom_Field_ID;
-  };
     return {
     appID:  'https://github.com/zendesk/widgets/tree/master/ProjectApp',
     defaultState: 'noproject',
@@ -47,7 +44,6 @@
     events: {
     'app.activated': 'init',
     'requiredProperties.ready': 'getProjectData',
-    'getExternalID.done': 'findProjects',
     'searchExternalID.done': function(data) {
        this.listProjects(data || {});
       },
@@ -133,7 +129,7 @@
     },
   processData: function(data, response, responseText) {
     this.ticket().tags().add(['project_parent', 'project_'+this.ticket().id()]);
-    this.ticket().customField('custom_field_' + displayProjectName.call(this) +'', 'Project-' + this.ticket().id());
+    this.ticket().customField('custom_field_' + this.settings.Custom_Field_ID +'', 'Project-' + this.ticket().id());
     this.createResultsData.push({'id': '' + data.ticket.id + '', 'external_id': '' + data.ticket.external_id + ''});
     this.switchTo('description', {
       createResult: this.createResultsData
@@ -199,7 +195,7 @@
           rootTicket.ticket.external_id = 'Project-' + ticket.id();
           rootTicket.ticket.tags = ['project_child', 'project_'+ ticket.id()];
           rootTicket.ticket.custom_fields = {};
-          rootTicket.ticket.custom_fields[ displayProjectName.call(this) ] = 'Project-' + ticket.id();
+          rootTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + ticket.id();
           var childCall = JSON.stringify(rootTicket);
           this.ajax('createTicket', childCall);
         }, this);
@@ -237,9 +233,11 @@
     this.prependSubject = this.settings.prependSubject;
     this.appendSubject = this.settings.appendSubject;
     //get the exteranl API on the currently viewed ticket
-    this.ajax('getExternalID', this.ticket().id());
+    this.ajax('getExternalID', this.ticket().id()).done(function(data){
+      this.findProjects(data);
+    });
     //get the value of the Project ticket field
-    var projectField = displayProjectName.call(this);
+    var projectField = this.settings.Custom_Field_ID;
     //build array of all possible types of empty return values
     var thereAreNulls = [undefined, null, ''];
     //check to see if the field is there, if it’s there is it empty. 
@@ -263,6 +261,7 @@
     this.ajax('searchExternalID', externalID, page);
   },
   listProjects: function(data){
+    console.log(data);
 		this.ticketList = [];
     var nextPage = 1;
     var btnClicked = (data.type === 'click');
@@ -279,17 +278,13 @@
     });
     this.parentSolve();
     //hide the remove button in the template if not child ticket
-    this.$('button.removeTicket').hide();
+    this.$('button.child').hide();
     this.$('button.displayList').hide();
-    this.$('button.displayForm').show();
-    this.$('button.displayMultiCreate').show();
-    this.$('button.displayUpdate').show();
+    this.$('button.parent').show();
     //if the current ticket is a child hide the create buttons in the template and show the remove
     if (_.indexOf(this.ticket().tags(), 'project_child') !== -1) {
-      this.$('button.displayForm').hide();
-      this.$('button.displayMultiCreate').hide();
-      this.$('button.displayUpdate').hide();
-      this.$('button.removeTicket').show();
+      this.$('button.parent').hide();
+      this.$('button.child').show();
     }
   },
   parentSolve: function() {
@@ -329,7 +324,10 @@
     }
 	},
 	updateList: function() {
-    this.ajax('getExternalID', this.ticket().id());
+    console.log('list clicked');
+    this.ajax('getExternalID', this.ticket().id()).done(function(data){
+      this.findProjects(data);
+    });
 	},
 	groupName: function(groupID) {
 		if (groupID === null) { return 'None'; }
@@ -386,14 +384,14 @@
       this.putTicketData(data.ticket.tags, 'project_child', 'remove', data);
       var projectTag = data.ticket.external_id.replace(/-/i, '_').toLowerCase();
       this.ticket().tags().remove(['project_child', projectTag]);
-      this.ticket().customField('custom_field_' + displayProjectName.call(this) +'', '');
+      this.ticket().customField('custom_field_' + this.settings.Custom_Field_ID +'', '');
     });
   },
   putTicketData: function (tags, linking, type, data) {
     var ticketTags = tags;
     var isParent = (_.indexOf(ticketTags, 'project_parent') !== -1);
     var ticketUpdateID;
-    var updateTicket = {};
+    //var updateTicket = {};
     if (_.isObject(data)) {
       ticketUpdateID = data.ticket.id;
     } else {
@@ -401,26 +399,24 @@
     } 
     updateTicket.ticket = {};
     updateTicket.ticket.custom_fields = {};
-    console.log(this.settings.Custom_Field_ID);
+    updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id(); 
+    updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
     if (!isParent && type === 'add') {
       ticketTags.push(linking, 'project_'+ this.ticket().id());
-
-      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id(); 
-      updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
     } else if (!isParent && type === 'remove') {
       var projectTag = data.ticket.external_id.replace(/-/i, '_').toLowerCase();
       ticketTags.splice(_.indexOf(tags, "project_child"),1);
       ticketTags.splice(_.indexOf(tags, projectTag),1);
-      updateTicket.ticket.custom_fields[ displayProjectName.call(this) ] = ''; 
+      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = ''; 
       updateTicket.ticket.external_id = '';
     } else {
       ticketTags.push(linking, 'project_'+ this.ticket().id());
-      updateTicket.ticket.custom_fields[ this.settings.Custom_Field_ID ] = 'Project-' + this.ticket().id(); 
-      updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
     }        
     updateTicket.ticket.tags = ticketTags;
     var thisTicket = JSON.stringify(updateTicket);
-    this.ajax('putExternalID', thisTicket, ticketUpdateID);
+    this.ajax('putExternalID', thisTicket, ticketUpdateID).done(function(data){
+      this.processData();
+    });
    
   },
   // HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS
