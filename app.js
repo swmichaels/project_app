@@ -31,8 +31,13 @@
   };
   var buildTicketFormList = function(item){
     this.ticketForms[item.id] = item.ticket_field_ids;
+    // get default ticket form ID as necessary
+    if (item['default']) {
+      this.defaultTicketFormID = item.id;
+    }
   };
-    return {
+
+  return {
     appID:  'https://github.com/zendesk/widgets/tree/master/ProjectApp',
     defaultState: 'list',
     name: '',
@@ -46,38 +51,59 @@
     createResultsData: [],
     isSolvable : true,
     whatIsSolved: ['closed','solved'],
-    currAttempt : 0,
     MAX_ATTEMPTS : 20,
-    events: {
-    'app.activated': 'init',
-    // 'requiredProperties.ready': 'getProjectData',
-    'getExternalID.done': 'findProjects',
-    'searchExternalID.done': function(data) {
-       this.listProjects(data || {});
-      },
-    'click .submitSpoke': 'createTicketValues',
-    'click .submitBulk': 'createBulkTickets',
-    'createTicket.done': 'processData',
-    'click .displayForm': 'switchToReqester',
-		'click .displayList': 'updateList',
-    'click .displayMultiCreate': 'switchToBulk',
-    'getGroups.done': 'processGroups',
-		'getAgents.done': 'processAgents',
-    'click .displayUpdate': 'switchToUpdate',
-    'click .updateticket': 'updateTickets',
-    'click .removeTicket': 'removeFrom',
-    'ticket.save': function() {
-      var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
-      if(hasProjectChildTag){
-        return true;
-      }
-      if(!this.isSolvable && this.ticket().status() === 'solved'){
-        return false;
-      }
-    },
-    'getTicketForms.done': 'processTicketForms'
+    defaultTicketFormID: '',
+    currentTicketformID: '',
 
-  }, //end events
+    events: {
+      // Lifecycle
+      'app.activated':             'init',
+      'requiredProperties.ready': 'projectNameFieldExist',
+      'ticket.form.id.changed': function () {
+        this.currentTicketformID = this.ticket().form().id();
+        // console.log ("aa-- in ticket.form.id.changed: this.currentTicketformID =", this.currentTicketformID);
+        // this.projectNameFieldExist();
+            this.currAttempt = 0;
+    this.requiredProperties = ['custom_field_' + this.settings.Custom_Field_ID];
+
+    this.allRequiredPropertiesExist();
+        //this.getProjectData();
+      },
+
+        // DOM events
+      'click .submitSpoke':        'createTicketValues',
+      'click .submitBulk':         'createBulkTickets',
+      'click .displayForm':        'switchToReqester',
+      'click .displayList':        'updateList',
+      'click .displayMultiCreate': 'switchToBulk',
+      'click .displayUpdate':      'switchToUpdate',
+      'click .updateticket':       'updateTickets',
+      'click .removeTicket':       'removeFrom',
+
+      // Requests
+      'createTicket.done':         'processData',
+      'getGroups.done':            'processGroups',
+      'getAgents.done':            'processAgents',
+      'getTicketForms.done':       'processTicketForms',
+      'getExternalID.done':        'findProjects',
+
+      'searchExternalID.done': function(data) {
+         this.listProjects(data || {});
+        },
+
+      // Hooks
+      'ticket.save': function() {
+        var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
+        if(hasProjectChildTag){
+          return true;
+        }
+        if(!this.isSolvable && this.ticket().status() === 'solved'){
+          return false;
+        }
+      }
+
+    }, //end events
+
   requests: {
     createTicket: function(childCall) {
       return {
@@ -152,6 +178,7 @@
     }, //end requests
 
   init: function() {
+    this.currAttempt = 0;
       // aa - adding checks
       // var ticketFormID = this.ticket().form().id();
       // console.log("aa-- init() : current ticketFormID =", ticketFormID);
@@ -170,10 +197,11 @@
       console.log("aa-- init() : this.ticket().form().id() =", this.ticket().form().id());
       // get all TicketForms in the system
       this.getTicketFormData(1);
-      console.log ("aa-- in init: this.ticketForms =", this.ticketForms);
+      // console.log ("aa-- in init: this.ticketForms =", this.ticketForms);
 
-      this.requiredProperties = ['ticket.requester.email', 'custom_field_' + this.settings.Custom_Field_ID, 'ticket.id', 'ticket.form.id'];
-      this.allRequiredPropertiesExist();
+      // this.requiredProperties = ['ticket.requester.email', 'custom_field_' + this.settings.Custom_Field_ID, 'ticket.id'];
+
+      // this.allRequiredPropertiesExist();
     },
 
   processData: function(data, response, responseText) {
@@ -275,10 +303,11 @@
     this.autocompleteGroup();
   },
   getProjectData: function(data) {
-      //get all the groups
-      this.getGroupsData(1);
-      //get all the agents in the system V2 API
-      this.getAgentData(1);
+
+    //get all the groups
+    this.getGroupsData(1);
+    //get all the agents in the system V2 API
+    this.getAgentData(1);
 
     this.prependSubject = this.settings.prependSubject;
     this.appendSubject = this.settings.appendSubject;
@@ -294,32 +323,70 @@
           // var ticketFormID = 123456;
           // console.log ("aa-- hard coding ticketFormID =", ticketFormID);
 
-    console.log ("aa-- this.settings.Custom_Field_ID =", this.settings.Custom_Field_ID);
+    // console.log ("aa-- this.settings.Custom_Field_ID =", this.settings.Custom_Field_ID);
 
           // this.ticketForms[ticketFormID] = [1, 2, 3, 4, 5, 6, 7, 23028736];
           // console.log ("aa-- hard coding this.ticketForms[123456] =", this.ticketForms[123456]);
 
     // console.log ("aa-- this.ticketForms[32033] =", this.ticketForms[32033]);
 
-    var ticketFormID = this.ticket().form().id();
+    // check to see if this.ticket().form().id() is defined or not
+    this.currentTicketformID = this.ticket().form().id() || this.defaultTicketFormID;
+    // console.log ("aa-- this.currentTicketformID =", this.currentTicketformID);
+    // console.log ("aa-- this.ticketForms[this.currentTicketformID] =", this.ticketForms[this.currentTicketformID]);
+    // console.log ("aa-- _.indexOf(this.ticketForms[this.currentTicketformID], parseInt(this.settings.Custom_Field_ID, 10) =", _.indexOf(this.ticketForms[this.currentTicketformID], parseInt(this.settings.Custom_Field_ID, 10)));
 
-    debugger;
+    // this.projectNameFieldExist();
 
-    if ( _.indexOf(this.ticketForms[ticketFormID], this.settings.Custom_Field_ID) !== -1 ) {
-    // if ( _.indexOf(this.ticketForms[32033], this.settings.Custom_Field_ID) !== -1 ) {
+    // if ( _.indexOf(this.ticketForms[this.currentTicketformID], this.settings.Custom_Field_ID) !== -1 ) {
+    //   // project name custom field ID shows up in current ticket form
+    //   // go ahead and proceed withfurther checks
+
+    //   //check to see if the field is there, if it’s there is it empty.
+    //   var isNotEmpty = (_.indexOf(thereAreNulls, this.ticket().customField('custom_field_' + projectField +'')) === -1);
+
+    //   if (isNotEmpty){
+    //     //if the field contains a value disable editing of the field
+    //     this.ticketFields('custom_field_' + projectField +'').disable();
+    //   } else {
+    //     //if it’s not returned or empty hide the field
+    //     this.ticketFields('custom_field_' + projectField +'').hide();
+    //   }
+    // }
+    // else {
+    //   // project name custom field ID does not show up in current ticket form
+    //   console.log ("aa-- project name custom field does not exist in current form; exiting ...");
+    //   return;
+    // }
+    this.projectNameFieldExist();
+  },
+
+  // check to see if the custom field for "project name" exist in current form or not
+  projectNameFieldExist: function () {
+    var thereAreNulls = [undefined, null, ''];
+    console.log ("aa-- this.currentTicketformID =", this.currentTicketformID);
+    // console.log ("aa-- this.settings.Custom_Field_ID =", this.settings.Custom_Field_ID);
+    console.log ("aa-- this.ticketForms[this.currentTicketformID] =", this.ticketForms[this.currentTicketformID]);
+    // console.log ("aa-- _.indexOf(this.ticketForms[this.currentTicketformID], parseInt(this.settings.Custom_Field_ID,10)) =", _.indexOf(this.ticketForms[this.currentTicketformID], parseInt(this.settings.Custom_Field_ID,10)));
+
+    if ( _.indexOf(this.ticketForms[this.currentTicketformID], parseInt(this.settings.Custom_Field_ID,10)) !== -1 ) {
       // project name custom field ID shows up in current ticket form
       // go ahead and proceed withfurther checks
 
-      var thereAreNulls = [undefined, null, ''];
       //check to see if the field is there, if it’s there is it empty.
-      var isNotEmpty = (_.indexOf(thereAreNulls, this.ticket().customField('custom_field_' + projectField +'')) === -1);
+      var isNotEmpty = (_.indexOf(thereAreNulls, this.ticket().customField('custom_field_' + this.settings.Custom_Field_ID +'')) === -1);
 
       if (isNotEmpty){
         //if the field contains a value disable editing of the field
-        this.ticketFields('custom_field_' + projectField +'').disable();
+        this.ticketFields('custom_field_' + this.settings.Custom_Field_ID +'').disable();
       } else {
         //if it’s not returned or empty hide the field
-        this.ticketFields('custom_field_' + projectField +'').hide();
+        console.log('skip hide is fired custom_field_' + this.settings.Custom_Field_ID);
+        this.ticketFields('custom_field_' + this.settings.Custom_Field_ID +'').hide();
+        // console.log ("aa -- trying toggle ... ");
+        // this.ticketFields('custom_field_' + this.settings.Custom_Field_ID +'').toggle();
+
+        console.log ("aa-- is visible? ", this.ticketFields('custom_field_' + this.settings.Custom_Field_ID +'').isVisible());
       }
     }
     else {
@@ -328,6 +395,7 @@
       return;
     }
   },
+
   findProjects: function(data){
     if (data.ticket.external_id !== "") {
       this.getProjectSearch(data.ticket.external_id, 1);
@@ -395,13 +463,14 @@
   },
 
   processTicketForms: function(data) {
-    console.log ("aa-- in processTicketForms, data = ", data);
+    // console.log ("aa-- in processTicketForms, data = ", data);
     var nextPage = 1;
     _.each(data.ticket_forms, buildTicketFormList, this);
     if (data.next_page !== null){
       nextPage = nextPage + 1;
       this.getTicketFormData(nextPage);
     } else {
+      // console.log ("aa-- in processTicketForms(): this.ticketForms =", this.ticketForms);
       this.getProjectData();
     }
   },
@@ -468,10 +537,11 @@
     });
   },
   putTicketData: function (tags, linking, type, data) {
-    var ticketTags = tags;
-    var isParent = (_.indexOf(ticketTags, 'project_parent') !== -1);
-    var ticketUpdateID;
-    var updateTicket = {};
+    var ticketTags = tags,
+        isParent = (_.indexOf(ticketTags, 'project_parent') !== -1),
+        ticketUpdateID,
+        updateTicket = {};
+
     if (_.isObject(data)) {
       ticketUpdateID = data.ticket.id;
     } else {
@@ -506,13 +576,13 @@
   // HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS
     allRequiredPropertiesExist: function() {
       if (this.requiredProperties.length > 0) {
-        console.log ("aa-- this.requiredProperties[0] =", this.requiredProperties[0]);
+        // console.log ("aa-- this.requiredProperties[0] =", this.requiredProperties[0]);
         var valid = this.validateRequiredProperty(this.requiredProperties[0]);
         // prop is valid, remove from array
         if (valid) {
           this.requiredProperties.shift();
         }
-        console.log ("aa-- this.currAttempt =", this.currAttempt);
+        // console.log ("aa-- this.currAttempt =", this.currAttempt);
         if (this.requiredProperties.length > 0 && this.currAttempt < this.MAX_ATTEMPTS) {
           if (!valid) {
             ++this.currAttempt;
