@@ -55,21 +55,14 @@
     events: {
       // Lifecycle
       'app.activated':             'init',
-      'requiredProperties.ready': 'projectNameFieldExist',
+      'requiredProperties.ready': 'getProjectData',
       'ticket.form.id.changed': function () {
         this.currentTicketformID = this.ticket().form().id();
-        // console.log ("aa-- in ticket.form.id.changed: this.currentTicketformID =", this.currentTicketformID);
-        // this.projectNameFieldExist();
-            this.currAttempt = 0;
-    this.requiredProperties = ['custom_field_' + this.settings.Custom_Field_ID];
-
-    this.allRequiredPropertiesExist();
-        //this.getProjectData();
+        _.defer(this.projectNameFieldExist.bind(this));
       },
-
-        // DOM events
+      // DOM events
       'click .submitSpoke':        'createTicketValues',
-    'click .makeproj': 'listProjects',
+      'click .makeproj': 'listProjects',
       'click .submitBulk':         'createBulkTickets',
       'click .displayForm':        'switchToReqester',
       'click .displayList':        'updateList',
@@ -84,13 +77,10 @@
       'getAgents.done':            'processAgents',
       'getTicketForms.done':       'processTicketForms',
       'getExternalID.done':        'findProjects',
-
       'searchExternalID.done': function(data) {
          this.listProjects(data || {});
-        },
-
+        }
       // Hooks
-
     }, //end events
 
   requests: {
@@ -168,29 +158,9 @@
 
   init: function() {
     this.currAttempt = 0;
-      // aa - adding checks
-      // var ticketFormID = this.ticket().form().id();
-      // console.log("aa-- init() : current ticketFormID =", ticketFormID);
-
-      // var thereAreNulls = [undefined, null, ''];
-      // console.log ("aa-- _.indexOf(thereAreNulls, ticketFormID) =", _.indexOf(thereAreNulls, ticketFormID));
-
-      // if (_.indexOf(thereAreNulls, ticketFormID) == -1) {
-      //   console.log ("aa-- ticketFormID is defined, go ahead and get ticket fields in this form");
-      //   this.ajax ('getTicketFields', ticketFormID);
-      // }
-      // else {
-      //   console.log ("aa-- init() : not getting ticket fields because ticketFormID =", ticketFormID);
-      // }
-
-      console.log("aa-- init() : this.ticket().form().id() =", this.ticket().form().id());
-      // get all TicketForms in the system
-      this.getTicketFormData(1);
-      // console.log ("aa-- in init: this.ticketForms =", this.ticketForms);
-
-      // this.requiredProperties = ['ticket.requester.email', 'custom_field_' + this.settings.Custom_Field_ID, 'ticket.id'];
-
-      // this.allRequiredPropertiesExist();
+    this.getTicketFormData(1);
+    this.requiredProperties = ['custom_field_' + this.settings.Custom_Field_ID];
+    this.allRequiredPropertiesExist();
     },
 
   processData: function(data, response, responseText) {
