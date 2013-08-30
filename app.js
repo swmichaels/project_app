@@ -86,6 +86,7 @@
       'getGroups.done': 'processGroups',
       'getAgents.done': 'processAgents',
       'getTicketForms.done': 'processTicketForms',
+      'getTicketForms.fail': 'ticketFormsFail',
       'getExternalID.done': 'findProjects',
       'searchExternalID.done': function(data) {
         this.listProjects(data || {});
@@ -403,7 +404,9 @@
         this.getProjectData();
       }
     },
-
+    ticketFormsFail: function() {
+      this.getProjectData();
+    },
     updateList: function() {
       this.ajax('getExternalID', this.ticket().id()).done(function(data) {
         this.findProjects(data);
