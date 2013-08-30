@@ -17,5 +17,8 @@
     "description":  "Create Children tickets that all link back to a parent ticket.",
     "name":         "Project Management"
   },
+  "user": {
+    "btnCurrComm": "Make a Project from this ticket"
+    },
   "none": "Not currently in a Project"
 }
