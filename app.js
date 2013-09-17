@@ -43,7 +43,14 @@
         this.defaultTicketFormID = item.id;
       }
     };
-
+  var buildTicketFieldList = function(item) {
+    // get default ticket form ID as necessary
+    if (item.active) {
+      this.ticketFieldList.push(item.id);
+    }
+    this.ticketForms['1'] = this.ticketFieldList;
+    this.defaultTicketFormID = 1;
+  };
   return {
     appID: 'https://github.com/zendesk/widgets/tree/master/ProjectApp',
     defaultState: 'noproject',
@@ -61,6 +68,7 @@
     MAX_ATTEMPTS: 20,
     defaultTicketFormID: '',
     currentTicketformID: '',
+    ticketFieldList: [],
 
     events: {
       // Lifecycle
@@ -86,8 +94,9 @@
       'getGroups.done': 'processGroups',
       'getAgents.done': 'processAgents',
       'getTicketForms.done': 'processTicketForms',
-      'getTicketForms.fail': 'ticketFormsFail',
+      'getTicketForms.fail': 'getTicketFieldsData',
       'getExternalID.done': 'findProjects',
+      'getTicketFields.done': 'processTicketFields',
       'searchExternalID.done': function(data) {
         this.listProjects(data || {});
       }
@@ -160,6 +169,14 @@
       getTicketForms: function() {
         return {
           url: '/api/v2/ticket_forms.json',
+          dataType: 'JSON',
+          type: 'GET',
+          proxy_v2: true
+        };
+      },
+      getTicketFields: function() {
+        return {
+          url: '/api/v2/ticket_fields.json',
           dataType: 'JSON',
           type: 'GET',
           proxy_v2: true
@@ -404,8 +421,18 @@
         this.getProjectData();
       }
     },
-    ticketFormsFail: function() {
-      this.getProjectData();
+    processTicketFields: function(data){
+      var nextPage = 1;
+      _.each(data.ticket_fields, buildTicketFieldList, this);
+      if (data.next_page !== null) {
+        nextPage = nextPage + 1;
+        this.getTicketFieldsData(nextPage);
+      } else {
+        this.getProjectData();
+      }
+    },
+    getTicketFieldsData: function(page){
+      this.ajax('getTicketFields', page);
     },
     updateList: function() {
       this.ajax('getExternalID', this.ticket().id()).done(function(data) {
