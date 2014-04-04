@@ -28,7 +28,7 @@
       <tbody>
     </table>
   {{#unless projects.length}}
-    <p>{{t "none"}}}</p>
+    <p>{{t "none"}}</p>
   {{/unless}}
 
 </div>
