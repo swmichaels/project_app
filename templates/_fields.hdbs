@@ -1,0 +1,68 @@
+<div id='custom-fields'>
+{{#each fields}}
+  {{#if text}}
+      <li>
+        <label for="{{id}}">{{title}}</label>
+        <input type="{{type}}" required name="{{id}}" id="{{id}}" style="width: 196px" style="width: 196px;" placeholder="{{raw_description}}"/>
+      </li>
+    {{else}}
+    {{#if textarea}}
+      <li>
+        <label>{{title}}<textarea required="required" rows="5" name="{{id}}" id="{{id}}" style="width: 196px" placeholder="{{raw_description}}"></textarea></label>
+      </li>
+      {{else}}
+      {{#if tagger}}
+      <li>
+      <div class="select" required = "required">
+          <label for="{{id}}">{{title}}</label>
+           <select id="{{id}}" required name="{{id}}" onchange style="width: auto;" size="1">
+            <option value="">-</option>
+            {{#each custom_field_options}}
+              {{#if selected}}
+                <option value="{{value}}" selected>{{name}}</option>
+                {{else}}
+                <option value="{{value}}">{{name}}</option>
+                {{/if}}
+            {{/each}}
+           </select>
+      </li>
+      {{else}}
+      {{#if checkbox}}
+      <li>
+        <label for="{{id}}">{{title}}</label>
+        <input id="{{id}}" name="{{id}}" value=true type="checkbox">
+      </li>
+      {{else}}
+      {{#if date}}
+        <li>
+          <label for="{{id}}">{{title}}</label>
+          <input type="{{type}}" required name="{{id}}" id="{{id}}" style="width: 196px" placeholder="{{raw_description}}"/>
+        </li>
+      {{else}}
+      {{#if integer}}
+        <li>
+          <label for="{{id}}">{{title}}</label>
+          <input type="text" required name="{{id}}" id="{{id}}" style="width: 196px" pattern="{{regexp_for_validation}}" placeholder="{{raw_description}}"/>
+        </li>
+      {{else}}
+      {{#if decimal}}
+        <li>
+          <label for="{{id}}">{{title}}</label>
+          <input type="text" required name="{{id}}" id="{{id}}" style="width: 196px" pattern="{{regexp_for_validation}}" placeholder="{{raw_description}}"/>
+        </li>
+        {{else}}
+      {{#if regexp}}
+        <li>
+          <label for="{{id}}">{{title}}</label>
+          <input type="text" required name="{{id}}" id="{{id}}" style="width: 196px" pattern="{{regexp_for_validation}}" placeholder="{{raw_description}}"/>
+        </li>
+      {{/if}}
+      {{/if}}
+      {{/if}}
+      {{/if}}
+      {{/if}}
+      {{/if}}
+      {{/if}}
+      {{/if}}
+{{/each}}
+</div>

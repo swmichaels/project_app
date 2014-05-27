@@ -1,4 +1,5 @@
 (function() {
+  //$('#zendeskSelect option[value="48491"]').attr('selected', 'selected');
   //build a group object for looking up a group name from id
   var buildGroupList = function(item) {
       this.groups[item.id] = item.name;
@@ -38,6 +39,10 @@
     };
   var buildTicketFormList = function(item) {
       this.ticketForms[item.id] = item.ticket_field_ids;
+      this.ticketForms[item.id].name = item.name;
+      if(this.ticket().form().id() === item.id ) {
+        this.ticketForms[item.id].selected = true;
+      }
       // get default ticket form ID as necessary
       if (item['default']) {
         this.defaultTicketFormID = item.id;
@@ -45,14 +50,46 @@
     };
   var buildTicketFieldList = function(item) {
     // get default ticket form ID as necessary
-    if (item.active) {
-      this.ticketFieldList.push(item.id);
+    if (item.active && item.removable === true) {
+      if(_.indexOf(this.ticketFieldList, item.id) === -1) {
+        switch(item.type){
+          case 'text':
+            item.text = true;
+            break;
+          case 'textarea':
+            item.textarea = true;
+            break;
+          case 'tagger':
+            item.tagger = true;
+            break;
+          case 'checkbox':
+            item.checkbox = true;
+            break;
+          case 'date':
+            item.date = true;
+            break;
+          case 'integer':
+            item.integer = true;
+            break;
+          case 'decimal':
+            item.decimal = true;
+            break;
+          case 'regexp':
+            item.regexp = true;
+            break;
+          default:
+            item.system = true;
+        }
+        this.ticketFieldList.push(item.id);
+        this.ticketFieldObj.push(item);
+      }
     }
     this.ticketForms['1'] = this.ticketFieldList;
     this.defaultTicketFormID = 1;
   };
+
   return {
-    appID: 'https://github.com/zendesk/widgets/tree/master/ProjectApp',
+    appID: 'ProjectApp',
     defaultState: 'noproject',
     name: '',
     prependSubject: '',
@@ -69,6 +106,8 @@
     defaultTicketFormID: '',
     currentTicketformID: '',
     ticketFieldList: [],
+    ticketFieldObj: [],
+    currentTicket: {},
 
     events: {
       // Lifecycle
@@ -88,6 +127,9 @@
       'click .displayUpdate': 'switchToUpdate',
       'click .updateticket': 'updateTickets',
       'click .removeTicket': 'removeFrom',
+      'change #zendeskForm': 'formSelected',
+      'change #zenType': 'showDate',
+     //place preset template buttons here
 
       // Requests
       'createTicket.done': 'processData',
@@ -187,10 +229,27 @@
     init: function() {
       this.getTicketFormData(1);
     },
+    // presetTemplate: function(){
+    //   var settings = JSON.parse(this.settings.settingsMap);
+    //   console.log('fields ', settings.template.fields);
+    //   this.setGroups(settings.template.groups);
+    //   this.setFields(settings.template.fields);
+    // },
 
+    setGroups: function(arrGroups){
+      arrGroups.forEach(function(x){
+        this.$('#zendeskSelect option[value="'+ x+'"]').attr('selected', 'selected');
+      }, this);
+    },
+    setFields: function(arrFields){
+      arrFields.forEach(function(x){
+        this.$('#' + x.id).val(x.value);
+      });
+    },
     processData: function(data, response, responseText) {
       this.ticket().tags().add(['project_parent', 'project_' + this.ticket().id()]);
       this.ticket().customField('custom_field_' + this.settings.Custom_Field_ID + '', 'Project-' + this.ticket().id());
+      if(data !== undefined) {
       this.createResultsData.push({
         'id': '' + data.ticket.id + '',
         'external_id': '' + data.ticket.external_id + ''
@@ -198,6 +257,8 @@
       this.switchTo('description', {
         createResult: this.createResultsData
       });
+
+      }
     },
     autocompleteRequesterEmail: function() {
       var self = this;
@@ -239,6 +300,8 @@
       }, this);
     },
     createTicketValues: function() {
+      //console.log(this.$('#custom-fields :input').serializeArray());
+      var fieldListArray = this.$('#custom-fields :input').serializeArray();
       var ticket = this.ticket();
       var groupSelected = [];
       this.createResultsData = [];
@@ -250,7 +313,11 @@
       groupSelected.forEach(function(group) {
         var rootTicket = {};
         rootTicket.ticket = {};
+        rootTicket.ticket.ticket_form_id = this.$('#zendeskForm').val();
         rootTicket.ticket.subject = this.$('#userSub').val();
+        rootTicket.ticket.due_at = this.$('#dueDate').val();
+        rootTicket.ticket.type = this.$('#zenType').val();
+        rootTicket.ticket.priority = this.$('#zenPri').val();
         rootTicket.ticket.comment = {};
         rootTicket.ticket.comment.value = this.$('#ticketDesc').val();
         rootTicket.ticket.requester = {};
@@ -263,6 +330,9 @@
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
         rootTicket.ticket.custom_fields = {};
         rootTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + ticket.id();
+        fieldListArray.forEach(function(field){
+          rootTicket.ticket.custom_fields[field.name] = field.value;
+        }, this);
         var childCall = JSON.stringify(rootTicket);
         this.ajax('createTicket', childCall);
       }, this);
@@ -274,6 +344,9 @@
     },
     switchToReqester: function() {
       var newSubject = this.ticket().subject();
+      var currentForm = this.ticket().form().id();
+      var ticketType = this.getTicketType(this.ticket().type());
+      var ticketPri = this.getTicketPri(this.ticket().priority());
       if (this.prependSubject) {
         newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
       }
@@ -281,16 +354,25 @@
         newSubject = newSubject + ' Project-' + this.ticket().id();
       }
       this.switchTo('requester', {
-        email: this.currentUser().email(),
+        ticketForm: this.ticketForms,
+        currentForm: currentForm,
+        email: this.ticket().requester().email(),
         groups: this.groupDrop,
         subject: newSubject,
-        desc: this.ticket().description()
+        desc: this.ticket().description(),
+        ticketType: ticketType,
+        ticketPri: ticketPri
       });
       this.$('button.displayList').show();
       this.$('button.displayForm').hide();
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
+      this.$('#zendeskForm').change();
+      this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
+      if(this.$('#zenType').val() === 'task'){
+        this.$('#dueDate').parent().show();
+      }
     },
     getProjectData: function() {
       //get all the groups
@@ -309,7 +391,24 @@
       this.currentTicketformID = this.ticket().form().id() || this.defaultTicketFormID;
       this.projectNameFieldExist();
     },
-
+    getTicketType: function(type){
+    var types = [{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
+    types.forEach(function(t){
+      if(t.value === type){
+        t.selected = true;
+      }
+    });
+    return types;
+  },
+  getTicketPri: function(type){
+    var pri = [{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
+    pri.forEach(function(t){
+      if(t.value === type){
+        t.selected = true;
+      }
+    });
+    return pri;
+  },
     // check to see if the custom field for "project name" exist in current form or not
     projectNameFieldExist: function() {
       var thereAreNulls = [undefined, null, ''];
@@ -330,6 +429,7 @@
     },
 
     findProjects: function(data) {
+      this.currentTicket.ticket = data.ticket;
       var thereAreNulls = [undefined, null, ''];
       var isNotEmpty = (_.indexOf(thereAreNulls, data.ticket.external_id) === -1);
       if (isNotEmpty) {
@@ -410,14 +510,12 @@
     },
 
     processTicketForms: function(data) {
-      //console.log ("aa-- in processTicketForms, data = ", data);
       var nextPage = 1;
       _.each(data.ticket_forms, buildTicketFormList, this);
       if (data.next_page !== null) {
         nextPage = nextPage + 1;
         this.getTicketFormData(nextPage);
       } else {
-        //console.log ("aa-- in processTicketForms(): this.ticketForms =", this.ticketForms);
         this.getProjectData();
       }
     },
@@ -428,8 +526,33 @@
         nextPage = nextPage + 1;
         this.getTicketFieldsData(nextPage);
       } else {
-        this.getProjectData();
+        this.displayFields = [];
+        var selectedFormArray = this.ticketForms[this.$('#zendeskForm').val()];
+        this.ticketFieldObj.forEach(function(d){
+          if(_.contains(selectedFormArray, d.id)){
+            this.displayFields.push(d);
+          }
+        }, this);
+        this.fieldsHTML = this.renderTemplate('_fields', {
+        fields: this.displayFields
+      });
+      this.$('#zendeskForm').after(this.fieldsHTML);
+      this.processTicketFieldsData();
       }
+    },
+    //sets the value of the displayed ticket form in the app
+    processTicketFieldsData: function(){
+      //grab the custom field div find the input and make an array 
+      var fieldListArray = this.$('#custom-fields :input').serializeArray();
+      //go through the array of current custom fields. 
+      fieldListArray.forEach(function(t){
+
+        this.currentTicket.ticket.custom_fields.forEach(function(x){
+          if(this.$('#' + x.id )){
+            this.$('#' + x.id ).val(x.value);
+          }
+        }, this);
+      }, this);
     },
     getTicketFieldsData: function(page){
       this.ajax('getTicketFields', page);
@@ -451,18 +574,57 @@
       }
       return this.assignees[assigneeID] || 'None';
     },
+    formSelected: function(){
+      this.$('#custom-fields').remove();
+      this.fieldsHTML = '';
+      this.getTicketFieldsData();
+    },
+    todaysDate: function() {
+      var today = new Date();
+      var dd = this.pad(today.getDate());
+      var mm = this.pad(today.getMonth()+1); //January is 0!
+      var yyyy = today.getFullYear();
+      //return yyyy+'-'+mm+'-'+dd;
+      return today;
+    },
+    pad: function(minutes) {
+      var whole;
+      if (Number(minutes) < 10) {
+        whole = '0' + minutes;
+      } else {
+        whole = minutes;
+      }
+      return whole;
+    },
+    showDate: function(){
+      if(this.$('#zenType').val() === 'task'){
+        this.$('#dueDate').parent().show();
+      }
+    },
     switchToBulk: function() {
+      var ticketType = this.getTicketType(this.ticket().type());
+      var ticketPri = this.getTicketPri(this.ticket().priority());
+      var currentForm = this.ticket().form().id();
       this.switchTo('multicreate', {
-        email: this.currentUser().email(),
+        ticketForm: this.ticketForms,
+        currentForm: currentForm,
+        email: this.ticket().requester().email(),
         groups: this.groupDrop,
         subject: this.ticket().subject(),
-        desc: this.ticket().description()
+        desc: this.ticket().description(),
+        ticketType: ticketType,
+        ticketPri: ticketPri
       });
       this.$('button.displayList').show();
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
+      this.$('#zendeskForm').change();
+      this.$('#dueDate').val(this.currentTicket.ticket.due_at || this.todaysDate()).datepicker({ dateFormat: 'yy-mm-dd' });
+      if(this.$('#zenType').val() === 'task'){
+        this.$('#dueDate').parent().show();
+      }
     },
     createBulkTickets: function() {
       this.createTicketValues();

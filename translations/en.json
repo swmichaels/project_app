@@ -12,7 +12,11 @@
       "appendSubject": {
         "label": "Append Subject Line", 
         "helpText": "Append the the subject line of the children tickest with the project ID"
-      }
+      },
+      "settingsMap" : {
+      "label": "Preset template mappings",
+      "helpText": "Settings for ticket types to set groups for bulk ticket creates. It needs to be in a JSON format"
+     }
       },
     "description":  "Create Children tickets that all link back to a parent ticket.",
     "name":         "Project Management"
