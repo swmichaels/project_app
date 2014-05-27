@@ -2,6 +2,20 @@
   <div id='createtheticket'>
     <ol>
       <li>
+      <div class="select" required = "required">
+          <label for="zendeskForm">Ticket Form</label>
+           <select id="zendeskForm" required name="zendeskForm" onchange style="width: auto;" size="1">
+            <option value="">-</option>
+            {{#each ticketForm}}
+              {{#if selected}}
+                <option value="{{@key}}" selected>{{name}}</option>
+                {{else}}
+                <option value="{{@key}}">{{name}}</option>
+                {{/if}}
+            {{/each}}
+           </select>
+      </li>
+      <li>
           <label for="userEmail">Requester</label>
            <input type="email" required placeholder="me@example.com" name="userEmail" id="userEmail" style="width: 196px" value="{{email}}"/>
       </li>
@@ -16,6 +30,37 @@
       <li style="display: none;">
           <label for="zendeskSelect">group id</label>
            <input type="text" required placeholder="Group id" name="zendeskSelect" id="zendeskSelect" value=""/>
+      </li>
+      <li>
+      <div class="select" required = "required">
+          <label for="zenType">Ticket Type</label>
+           <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
+            <option value="">-</option>
+            {{#each ticketType}}
+              {{#if selected}}
+                <option value="{{value}}" selected>{{title}}</option>
+                {{else}}
+                <option value="{{value}}">{{title}}</option>
+                {{/if}}
+            {{/each}}
+           </select>
+      </li>
+      <li style="display: none;">
+          <label for="dueDate">Due Date</label>
+           <input type="text" required placeholder="Due Date" name="dueDate" id="dueDate" style="width: 196px;" value=""/>
+      </li>
+      <div class="select" required = "required">
+          <label for="zenPri">Ticket Priority</label>
+           <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
+            <option value="">-</option>
+            {{#each ticketPri}}
+              {{#if selected}}
+                <option value="{{value}}" selected>{{title}}</option>
+                {{else}}
+                <option value="{{value}}">{{title}}</option>
+                {{/if}}
+            {{/each}}
+           </select>
       </li>
       <li>
           <label for="userSub">Subject</label>

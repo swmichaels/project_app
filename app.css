@@ -33,3 +33,10 @@
   .displayList, .displayForm, .displayMultiCreate, .displayUpdate, .removeTicket {
     display: none;
   }
+
+  #presets {
+    margin: 10px 10px 10px 10px;
+  }
+  #presets ol {
+    margin-top: 5px;
+  }
