@@ -16,7 +16,8 @@ When viewing a ticket that is not currently in a project a button will be displa
 ## Features:
 
 ## Set-up/installation instructions:
-* Requires a text field for the project id. This is so views can be built 
+* Requires a text field for the project id. This is so views can be built.
+* The optional settings map is used to set ticket fields and set groups for bulk ticket creates. It needs to be in a JSON format for example ```{"test1":{"groups":["21280887", "21368503", "21309456","21285363", "21281243", "21276877", "21496437", "21464693", "21309286", "21280308", "21510287", "21387293", "21381016"],"fields":[{"id": 23767108, "value": "termination_wb_fb"}]}, "test1":{"groups":["21280887", "21368503", "21309456","21285363", "21281243", "21276877", "21496437", "21464693", "21309286", "21280308", "21381016", "21368523", "21529906", "21510287"],"fields":[{"id": 23767108, "value": "termination_request_fb"}]}, "test2":{"groups":["21280887", "21368503", "21309456","21285363", "21281243", "21276877", "21496437", "21464693", "21309286", "21280308", "21381016", "21368523", "21529906", "21510287"],"fields":[{"id": 23767108, "value": "termination_request"}]}}```
 
 ## Contribution:
 
