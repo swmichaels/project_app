@@ -24,3 +24,4 @@ When viewing a ticket that is not currently in a project a button will be displa
 Pull requests are welcome.
 
 ## Screenshot(s):
+![](/assets/project-app-settings-page.png)
