@@ -1,29 +1,27 @@
 {
   "name": "Project App",
-  "author": {
-    "name": "Zendesk Sevices",
-    "email": "services@zendesk.com"
-  },
-     "parameters": [{
-       "name": "Custom_Field_ID",
-       "type": "text",
-       "required": true
-       },{
-        "name": "prependSubject",
-        "type": "checkbox"
-       },{
-        "name": "appendSubject",
-        "type": "checkbox"
-       },
-       {
-       "name": "settingsMap",
-       "type": "multiline",
-       "required": false 
-       }
-       ],
-  "frameworkVersion": "0.5",
-	"location":"ticket_sidebar",
-   "defaultLocale": "en",
-   "private": true,
-   "singleInstall": true
+	"author": {
+		"name": "Zendesk Labs",
+		"email": "zendesklabs@zendesk.com"
+	},
+	"parameters": [{
+		"name": "Custom_Field_ID",
+		"type": "text",
+		"required": true
+	}, {
+		"name": "prependSubject",
+		"type": "checkbox"
+	}, {
+		"name": "appendSubject",
+		"type": "checkbox"
+	}, {
+		"name": "settingsMap",
+		"type": "multiline",
+		"required": false
+	}],
+	"frameworkVersion": "1.0",
+	"location": "ticket_sidebar",
+	"defaultLocale": "en",
+	"private": false,
+	"singleInstall": true
 }
