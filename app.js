@@ -621,7 +621,7 @@
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
       this.$('#zendeskForm').change();
-      this.$('#dueDate').val(this.currentTicket.ticket.due_at || this.todaysDate()).datepicker({ dateFormat: 'yy-mm-dd' });
+      this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
         this.$('#dueDate').parent().show();
       }
