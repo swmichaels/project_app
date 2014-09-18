@@ -38,6 +38,7 @@
       this.ticketList.push(list);
     };
   var buildTicketFormList = function(item) {
+    if(!item.active){ return; }
       this.ticketForms[item.id] = item.ticket_field_ids;
       this.ticketForms[item.id].name = item.name;
       if(this.ticket().form().id() === item.id ) {
