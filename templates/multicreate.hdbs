@@ -26,8 +26,8 @@
       </li>
 			<li>
 			<div class="select" required = "required">
-			    <label for="zendeskSelect">Groups</label>
-			     <select id="zendeskSelect" required name="zendeskSelect" onchange style="width: auto;" size="1" multiple>
+			    <label for="zendeskGSelect">Groups</label>
+			     <select id="zendeskGSelect" required name="zendeskGSelect" onchange style="width: auto;" size="1" multiple>
 					  {{#each groups}}
 			          <option value="{{value}}">{{label}}</option>
 					  {{/each}}

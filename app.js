@@ -239,7 +239,7 @@
 
     setGroups: function(arrGroups){
       arrGroups.forEach(function(x){
-        this.$('#zendeskSelect option[value="'+ x+'"]').attr('selected', 'selected');
+        this.$('#zendeskGSelect option[value="'+ x+'"]').attr('selected', 'selected');
       }, this);
     },
     setFields: function(arrFields){
@@ -295,7 +295,7 @@
           return false;
         },
         select: function(event, ui) {
-          self.$("#zendeskSelect").val(ui.item.value);
+          self.$("#zendeskGSelect").val(ui.item.value);
           return false;
         }
       }, this);
@@ -306,10 +306,10 @@
       var ticket = this.ticket();
       var groupSelected = [];
       this.createResultsData = [];
-      if (Array.isArray(this.$('#zendeskSelect').val())) {
-        groupSelected = this.$('#zendeskSelect').val();
+      if (Array.isArray(this.$('#zendeskGSelect').val())) {
+        groupSelected = this.$('#zendeskGSelect').val();
       } else {
-        groupSelected.push(this.$('#zendeskSelect').val());
+        groupSelected.push(this.$('#zendeskGSelect').val());
       }
       groupSelected.forEach(function(group) {
         var rootTicket = {};
