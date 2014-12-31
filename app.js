@@ -113,7 +113,6 @@
     events: {
       // Lifecycle
       'app.activated': 'init',
-      'requiredProperties.ready': 'getProjectData',
       'ticket.form.id.changed': function() {
         this.currentTicketformID = this.ticket().form().id();
         _.defer(this.projectNameFieldExist.bind(this));
@@ -229,6 +228,7 @@
     //end requests
     init: function() {
       this.getTicketFormData(1);
+      this.getProjectData();
     },
     // presetTemplate: function(){
     //   var settings = JSON.parse(this.settings.settingsMap);
@@ -380,7 +380,6 @@
       this.getGroupsData(1);
       //get all the agents in the system V2 API
       this.getAgentData(1);
-
       this.prependSubject = this.settings.prependSubject;
       this.appendSubject = this.settings.appendSubject;
       //get the exteranl API on the currently viewed ticket
@@ -693,54 +692,6 @@
         this.processData();
       });
 
-    },
-
-
-    // HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS HELPER FUNCTIONS
-    allRequiredPropertiesExist: function() {
-      if (this.requiredProperties.length > 0) {
-        // console.log ("aa-- this.requiredProperties[0] =", this.requiredProperties[0]);
-        var valid = this.validateRequiredProperty(this.requiredProperties[0]);
-        // prop is valid, remove from array
-        if (valid) {
-          this.requiredProperties.shift();
-        }
-        // console.log ("aa-- this.currAttempt =", this.currAttempt);
-        if (this.requiredProperties.length > 0 && this.currAttempt < this.MAX_ATTEMPTS) {
-          if (!valid) {
-            ++this.currAttempt;
-          }
-
-          _.delay(_.bind(this.allRequiredPropertiesExist, this), 100);
-          return;
-        }
-      }
-      if (this.currAttempt < this.MAX_ATTEMPTS) {
-        this.trigger('requiredProperties.ready');
-      } else {
-        services.notify("error in allRequiredPropertiesExist!");
-      }
-    },
-
-    safeGetPath: function(propertyPath) {
-      return _.inject(propertyPath.split('.'), function(context, segment) {
-        if (context == null) {
-          return context;
-        }
-        var obj = context[segment];
-        if (_.isFunction(obj)) {
-          obj = obj.call(context);
-        }
-        return obj;
-      }, this);
-    },
-
-    validateRequiredProperty: function(propertyPath) {
-      if (propertyPath.match(/custom_field/)) {
-        return !!this.ticketFields(propertyPath);
-      }
-      var value = this.safeGetPath(propertyPath);
-      return value != null && value !== '' && value !== 'no';
     }
   }; //end first return
 }());
