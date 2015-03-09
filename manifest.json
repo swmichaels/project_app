@@ -23,6 +23,6 @@
 	"location": "ticket_sidebar",
 	"defaultLocale": "en",
 	"private": false,
-	"verison": "0.7",
+	"version": "0.8",
 	"singleInstall": true
 }
