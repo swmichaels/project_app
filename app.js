@@ -1,5 +1,5 @@
 (function() {
-  //$('#zendeskSelect option[value="48491"]').attr('selected', 'selected');
+
   //build a group object for looking up a group name from id
   var buildGroupList = function(item) {
       this.groups[item.id] = item.name;
@@ -16,10 +16,13 @@
   //build a list of tickets in the project
   var buildTicketList = function(item) {
       //push a objects into a array for the ticket list page
+      var type = (item.type == null ? '-' : item.type);
+      var priority = (item.priority == null ? '-' : item.priority);
       var list = {
         'id': '' + item.id + '',
         'status': '' + item.status + '',
-        'type': '' + item.type + '',
+        'priority': '' + priority + '',
+        'type': '' + type + '',
         'assignee_id': '' + this.assigneeName(item.assignee_id) + '',
         'group_id': '' + this.groupName(item.group_id) + '',
         'subject': '' + item.subject
@@ -121,7 +124,7 @@
       'click .submitSpoke': 'createTicketValues',
       'click .makeproj': 'listProjects',
       'click .submitBulk': 'createBulkTickets',
-      'click .displayForm': 'switchToReqester',
+      'click .displayForm': 'switchToRequester',
       'click .displayList': 'updateList',
       'click .displayMultiCreate': 'switchToBulk',
       'click .displayUpdate': 'switchToUpdate',
@@ -129,7 +132,6 @@
       'click .removeTicket': 'removeFrom',
       'change #zendeskForm': 'formSelected',
       'change #zenType': 'showDate',
-     //place preset template buttons here
 
       // Requests
       'createTicket.done': 'processData',
@@ -142,7 +144,6 @@
       'searchExternalID.done': function(data) {
         this.listProjects(data || {});
       }
-      // Hooks
     },
     //end events
     requests: {
@@ -225,17 +226,11 @@
         };
       }
     },
-    //end requests
+
     init: function() {
       this.getTicketFormData(1);
       this.getProjectData();
     },
-    // presetTemplate: function(){
-    //   var settings = JSON.parse(this.settings.settingsMap);
-    //   console.log('fields ', settings.template.fields);
-    //   this.setGroups(settings.template.groups);
-    //   this.setFields(settings.template.fields);
-    // },
 
     setGroups: function(arrGroups){
       arrGroups.forEach(function(x){
@@ -343,7 +338,7 @@
       this.putTicketData(currentTags, 'project_parent', 'add', ticket.id());
 
     },
-    switchToReqester: function() {
+    switchToRequester: function() {
       var newSubject = this.ticket().subject();
       var currentForm = this.ticket().form().id();
       var ticketType = this.getTicketType(this.ticket().type());
@@ -383,9 +378,7 @@
       this.prependSubject = this.settings.prependSubject;
       this.appendSubject = this.settings.appendSubject;
       //get the exteranl API on the currently viewed ticket
-      this.ajax('getExternalID', this.ticket().id()).done(function(data) {
-        this.findProjects(data);
-      });
+      this.ajax('getExternalID', this.ticket().id());
       //get the value of the Project ticket field
       var projectField = this.settings.Custom_Field_ID;
       this.currentTicketformID = this.ticket().form().id() || this.defaultTicketFormID;
@@ -467,7 +460,7 @@
     parentSolve: function() {
       //enable solve and if this.isSolvavle is false disable solve
       this.ticketFields('status').options('solved').enable();
-      //if this is a child ticket stop and exit function 
+      //if this is a child ticket stop and exit function
       var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
       if (hasProjectChildTag) {
         return true;
@@ -530,21 +523,23 @@
         var selectedFormArray = this.ticketForms[this.$('#zendeskForm').val()];
         this.ticketFieldObj.forEach(function(d){
           if(_.contains(selectedFormArray, d.id)){
-            this.displayFields.push(d);
+            if(d.type != "tickettype" && d.type != "priority") {
+              this.displayFields.push(d);
+            }
           }
         }, this);
         this.fieldsHTML = this.renderTemplate('_fields', {
         fields: this.displayFields
       });
-      this.$('#zendeskForm').after(this.fieldsHTML);
+      this.$('#zendeskForm').closest('.control-group').after(this.fieldsHTML);
       this.processTicketFieldsData();
       }
     },
     //sets the value of the displayed ticket form in the app
     processTicketFieldsData: function(){
-      //grab the custom field div find the input and make an array 
+      //grab the custom field div find the input and make an array
       var fieldListArray = this.$('#custom-fields :input').serializeArray();
-      //go through the array of current custom fields. 
+      //go through the array of current custom fields.
       fieldListArray.forEach(function(t){
 
         this.currentTicket.ticket.custom_fields.forEach(function(x){
@@ -558,9 +553,7 @@
       this.ajax('getTicketFields', page);
     },
     updateList: function() {
-      this.ajax('getExternalID', this.ticket().id()).done(function(data) {
-        this.findProjects(data);
-      });
+      this.ajax('getExternalID', this.ticket().id());
     },
     groupName: function(groupID) {
       if (groupID === null) {
@@ -648,7 +641,7 @@
           } else if (data.ticket.status === 'closed') {
             services.notify(data.ticket.id + ' is closed', 'error');
           } else if (_.indexOf(data.ticket.tags, 'project_child') !== -1) {
-            services.notify(data.ticket.id + ' is member of another project ' + data.ticket.external_id + ' ', 'error');
+            services.notify('Ticket ' + data.ticket.id + ' is already a member of another project: ' + data.ticket.external_id + ' ', 'error');
           }
         });
       }, this);
@@ -693,5 +686,5 @@
       });
 
     }
-  }; //end first return
+  };
 }());

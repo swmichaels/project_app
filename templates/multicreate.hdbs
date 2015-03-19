@@ -1,82 +1,79 @@
-<section data-main>
- <!-- <div id='presets'>  can be used for preset templates 
-  </div> -->
-	<div id='createtheticket'>
-		<ol>
-      <div class="select" required = "required">
-          <label for="zendeskForm">Ticket Form</label>
-           <select id="zendeskForm" required name="zendeskForm" onchange style="width: auto;" size="1">
-            <option value="">-</option>
-            {{#each ticketForm}}
-              {{#if selected}}
-                <option value="{{@key}}" selected>{{name}}</option>
-                {{else}}
-                <option value="{{@key}}">{{name}}</option>
-                {{/if}}
-            {{/each}}
-           </select>
-      </li>
-			<li>
-          <label for="userEmail">Requester</label>
-           <input type="email" required placeholder="me@example.com" name="userEmail" id="userEmail" style="width: 196px" value="{{email}}"/>
-      </li>
-      <li style="display: none;">
-          <label for="userName">Reqester Name</label>
-           <input type="text" required placeholder="Requester Name" name="userName" id="userName" style="width: 196px;" value=""/>
-      </li>
-			<li>
+<div class="row-fluid">
+	<div class="well span12">
+		<div class="control-group">
+    	<div class="select" required = "required">
+        <label for="zendeskForm">Ticket Form</label>
+        <select id="zendeskForm" required name="zendeskForm" onchange style="width: auto;" size="1">
+        	<option value="">-</option>
+          {{#each ticketForm}}
+            <option value="{{@key}}" {{#if selected}} selected="selected" {{/if}}>{{name}}</option>
+          {{/each}}
+				</select>
+			</div>
+    </div>
+
+		<div class="control-group">
+    	<label for="userEmail">Requester</label>
+			<input type="email" required placeholder="me@example.com" name="userEmail" id="userEmail" style="width: 196px" value="{{email}}"/>
+    </div>
+
+		<div class="control-group" style="display: none;">
+    	<label for="userName">Requester Name</label>
+      <input type="text" required placeholder="Requester Name" name="userName" id="userName" style="width: 196px;" value=""/>
+    </div>
+
+		<div class="control-group">
 			<div class="select" required = "required">
-			    <label for="zendeskGSelect">Groups</label>
-			     <select id="zendeskGSelect" required name="zendeskGSelect" onchange style="width: auto;" size="1" multiple>
-					  {{#each groups}}
-			          <option value="{{value}}">{{label}}</option>
-					  {{/each}}
-			     </select>
-			</li>
-      <li>
-      <div class="select" required = "required">
-          <label for="zenType">Ticket Type</label>
-           <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
-            <option value="">-</option>
-            {{#each ticketType}}
-              {{#if selected}}
-                <option value="{{value}}" selected>{{title}}</option>
-                {{else}}
-                <option value="{{value}}">{{title}}</option>
-                {{/if}}
-            {{/each}}
-           </select>
-      </li>
-      <li style="display: none;">
-          <label for="dueDate">Due Date</label>
-           <input type="text" required placeholder="Due Date" name="dueDate" id="dueDate" style="width: 196px;" value=""/>
-      </li>
-       <div class="select" required = "required">
-          <label for="zenPri">Ticket Priority</label>
-           <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
-            <option value="">-</option>
-            {{#each ticketPri}}
-              {{#if selected}}
-                <option value="{{value}}" selected>{{title}}</option>
-                {{else}}
-                <option value="{{value}}">{{title}}</option>
-                {{/if}}
-            {{/each}}
-           </select>
-      </li>
-			<li>
-			    <label for="userSub">Subject</label>
-					  <!-- <span STYLE="color: green; font-size: 10pt">Required</span> -->
-			     <input required placeholder="Enter Subject" type="text" name="userSub" id="userSub" style="width: 196px" value="{{subject}}"/>
-			</li>
-			
-			<li>
-        <label>Description<textarea required="required" rows="10" name="ticketDesc" id="ticketDesc" style="width: 196px" placeholder="Please Describe the issue">{{desc}}</textarea></label>  
-			</li>
-		<li>
-	   <button class='submitSpoke ember-view btn'>Create Bulk Tickets</button>
-     </li>
-	   </ol>
-	   </div>
-   </div>
-</section>
+		  	<label for="zendeskGSelect">Groups</label>
+		    <select id="zendeskGSelect" required name="zendeskGSelect" onchange style="width: auto;" size="1" multiple>
+				{{#each groups}}
+		    	<option value="{{value}}">{{label}}</option>
+				{{/each}}
+				</select>
+			</div>
+		</div>
+
+		<div class="control-group">
+    	<div class="select" required = "required">
+      	<label for="zenType">Ticket Type</label>
+        <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
+        	<option value="">-</option>
+        	{{#each ticketType}}
+            <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
+          {{/each}}
+      	</select>
+			</div>
+    </div>
+
+		<div class="control-group" style="display: none;">
+    	<label for="dueDate">Due Date</label>
+      <input type="text" required placeholder="Due Date" name="dueDate" id="dueDate" style="width: 196px;" value=""/>
+    </div>
+
+		<div class="control-group">
+			<div class="select" required = "required">
+      	<label for="zenPri">Ticket Priority</label>
+        <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
+        	<option value="">-</option>
+          {{#each ticketPri}}
+            <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
+          {{/each}}
+        </select>
+			</div>
+    </div>
+
+		<div class="control-group">
+			<label for="userSub">Subject</label>
+		  <input required placeholder="Enter Subject" type="text" name="userSub" id="userSub" style="width: 196px" value="{{subject}}"/>
+		</div>
+
+		<div class="control-group">
+			<label for="ticketDesc">Description</label>
+			<textarea required="required" rows="10" name="ticketDesc" id="ticketDesc" style="width: 196px" placeholder="Please Describe the issue">{{desc}}</textarea>
+		</div>
+
+		<div class="control-group">
+			<button class='submitSpoke ember-view btn'>Create Bulk Tickets</button>
+		</div>
+	</div>
+</div>
