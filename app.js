@@ -437,6 +437,7 @@
       var nextPage = 1;
       var btnClicked = (data.type === 'click');
       if (!btnClicked) {
+        this.isSolvable = true; // Resets solvable status before building Ticket List
         _.each(data.tickets, buildTicketList, this);
         if (data.next_page !== null) {
           nextPage = nextPage + 1;
@@ -458,7 +459,7 @@
       }
     },
     parentSolve: function() {
-      //enable solve and if this.isSolvavle is false disable solve
+      //enable solve and if this.isSolvable is false disable solve
       this.ticketFields('status').options('solved').enable();
       //if this is a child ticket stop and exit function
       var hasProjectChildTag = _.include(this.ticket().tags(), 'project_child');
