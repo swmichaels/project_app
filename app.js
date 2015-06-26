@@ -143,7 +143,10 @@
       'getTicketFields.done': 'processTicketFields',
       'searchExternalID.done': function(data) {
         this.listProjects(data || {});
-      }
+      },
+
+      // Zendesk Events
+      'ticket.status.changed': 'ticketStatusChangedHandler'
     },
     //end events
     requests: {
@@ -686,6 +689,11 @@
         this.processData();
       });
 
+    },
+    // Triggered whenever a ticket had a status change
+    ticketStatusChangedHandler: function(){
+      // Forces a list update to fetch new ticket status
+      this.updateList();
     }
   };
 }());
