@@ -22,12 +22,12 @@
 
     <div class="control-group">
       <label for="zendeskGroup">Group</label>
-      <input type="text" placeholder="Group Name" name="zendeskGroup" id="zendeskGroup" style="width: 196px;" value=""/>
+      <input type="text" placeholder="Group Name" name="zendeskGroup" id="zendeskGroup" style="width: 196px;" value="{{groupName}}"/>
     </div>
 
     <div class="control-group" style="display: none;">
-      <label for="zendeskSelect">Group Id</label>
-      <input type="text" required placeholder="Group id" name="zendeskSelect" id="zendeskSelect" value=""/>
+      <label for="zendeskGSelect">Group Id</label>
+      <input type="text" required placeholder="Group id" name="zendeskGSelect" id="zendeskGSelect" value="{{groupId}}"/>
     </div>
 
     <div class="control-group">

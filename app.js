@@ -288,13 +288,19 @@
       this.$('#zendeskGroup').autocomplete({
         minLength: 3,
         source: this.groupDrop,
-        focus: function(event, ui) {
-          self.$("#zendeskGroup").val(ui.item.label);
+        select: function(event, ui) {
+          self.$("#assigneeName").val(ui.item.label);
+          self.$("#assigneeId").val(ui.item.value);
           return false;
         },
-        select: function(event, ui) {
-          self.$("#zendeskGSelect").val(ui.item.value);
-          return false;
+        change: function(event, ui) {
+          if (_.isNull(ui.item)) {
+            self.$("#zendeskGroup").val('');
+            self.$("#zendeskGSelect").val('');
+          } else {
+            self.$("#zendeskGroup").val(ui.item.label);
+            self.$("#zendeskGSelect").val(ui.item.value);
+          }
         }
       }, this);
     },
@@ -356,7 +362,6 @@
         ticketForm: this.ticketForms,
         currentForm: currentForm,
         email: this.ticket().requester().email(),
-        groups: this.groupDrop,
         subject: newSubject,
         desc: this.ticket().description(),
         ticketType: ticketType,
@@ -616,7 +621,6 @@
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
-      this.autocompleteGroup();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
