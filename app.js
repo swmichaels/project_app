@@ -369,6 +369,7 @@
         fieldListArray.forEach(function(field){
           rootTicket.ticket.custom_fields[field.name] = field.value;
         }, this);
+        this.duplicateCustomFieldsValues(rootTicket.ticket);
         var childCall = JSON.stringify(rootTicket);
         this.ajax('createTicket', childCall);
       }, this);
@@ -377,6 +378,27 @@
       var currentTags = this.ticket().tags();
       this.putTicketData(currentTags, 'project_parent', 'add', ticket.id());
 
+    },
+    duplicateCustomFieldsValues: function(ticketObjectForApi) {
+      var me = this;
+      // Read out the ids for the desired custom fields to copy.
+      var customFieldIdsToCopySetting = me.setting('customFieldIdsToCopy') + '',
+          customFieldIdsToCopy = customFieldIdsToCopySetting.match(/\b\d+\b/g);
+      // Done if there are none.
+      if (!customFieldIdsToCopy.length) {
+        return;
+      }
+      
+      // Copy the value of each (existing) custom field. Don't overwrite.
+      if (!_.has(ticketObjectForApi, 'custom_fields')) {
+        ticketObjectForApi.custom_fields = {};
+      }
+      customFieldIdsToCopy.forEach(function(customFieldIdToCopy){
+        if (_.has(ticketObjectForApi.custom_fields, customFieldIdToCopy)) {
+          return;
+        }
+        ticketObjectForApi.custom_fields[customFieldIdToCopy] = me.ticket().customField('custom_field_' + customFieldIdToCopy + '');
+      });
     },
     switchToRequester: function() {
       var newSubject = this.ticket().subject();

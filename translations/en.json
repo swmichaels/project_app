@@ -30,6 +30,10 @@
       "defaultTicketPriority" : {
         "label": "Default ticket priority",
         "helpText": "Instead of taking over the ticket priority from the current ticket, use this priority by default. Empty (to take over), or one of: low, normal, high, urgent."
+      },
+      "customFieldIdsToCopy" : {
+        "label": "Copy values from Custom Fields",
+        "helpText": "(Optionally) copy the values from the Custom Fields with these ID(s) to the new ticket(s). Comma separated."
       }
     }
   },

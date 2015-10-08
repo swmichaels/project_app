@@ -29,6 +29,10 @@
 		"name": "defaultTicketPriority",
 		"type": "text",
                 "required": false
+	}, {
+		"name": "customFieldIdsToCopy",
+		"type": "text",
+                "required": false
 	}],
 	"frameworkVersion": "1.0",
 	"location": "ticket_sidebar",
