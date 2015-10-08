@@ -382,10 +382,10 @@
     duplicateCustomFieldsValues: function(ticketObjectForApi) {
       var me = this;
       // Read out the ids for the desired custom fields to copy.
-      var customFieldIdsToCopySetting = me.setting('customFieldIdsToCopy') + '',
+      var customFieldIdsToCopySetting = me.setting('customFieldIdsToCopy') || '',
           customFieldIdsToCopy = customFieldIdsToCopySetting.match(/\b\d+\b/g);
       // Done if there are none.
-      if (!customFieldIdsToCopy.length) {
+      if (!(customFieldIdsToCopy && customFieldIdsToCopy.length)) {
         return;
       }
       
