@@ -22,12 +22,12 @@
 
     <div class="control-group">
       <label for="assigneeId">Assignee Name</label>
-      <input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px"/>
+      <input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" value="{{assigneeName}}"/>
     </div>
 
     <div class="control-group" style="display: none;">
       <label for="assigneeId">Assignee Id</label>
-      <input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId"/>
+      <input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId" value="{{assigneeId}}"/>
     </div>
 
     <div class="control-group">

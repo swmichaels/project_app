@@ -389,10 +389,25 @@
       if (this.appendSubject) {
         newSubject = newSubject + ' Project-' + this.ticket().id();
       }
+      var assigneeId, assigneeName, groupId, groupName;
+      if (this.setting('prefillAssignee')) {
+        if (this.ticket().assignee().user()) {
+          assigneeName = this.ticket().assignee().user().name();
+          assigneeId = this.ticket().assignee().user().id();
+        }
+        if (this.ticket().assignee().group()) {
+          groupName = this.ticket().assignee().group().name();
+          groupId = this.ticket().assignee().group().id();
+        }
+      }
       this.switchTo('requester', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
         email: this.ticket().requester().email(),
+        assigneeName: assigneeName,
+        assigneeId: assigneeId,
+        groupName: groupName,
+        groupId: groupId,
         subject: newSubject,
         desc: this.ticket().description(),
         ticketType: ticketType,
@@ -639,10 +654,19 @@
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
       var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
       var currentForm = this.ticket().form().id();
+      var assigneeId, assigneeName;
+      if (this.setting('prefillAssignee')) {
+        if (this.ticket().assignee().user()) {
+          assigneeName = this.ticket().assignee().user().name();
+          assigneeId = this.ticket().assignee().user().id();
+        }
+      }
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
         email: this.ticket().requester().email(),
+        assigneeName: assigneeName,
+        assigneeId: assigneeId,
         groups: this.groupDrop,
         subject: this.ticket().subject(),
         desc: this.ticket().description(),
