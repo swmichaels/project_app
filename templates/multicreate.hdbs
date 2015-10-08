@@ -22,6 +22,16 @@
       <input type="text" required placeholder="Requester Name" name="userName" id="userName" style="width: 196px;" value=""/>
     </div>
 
+    <div class="control-group">
+      <label for="assigneeId">Assignee Name</label>
+      <input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px"/>
+    </div>
+
+    <div class="control-group" style="display: none;">
+      <label for="assigneeId">Assignee Id</label>
+      <input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId"/>
+    </div>
+
 		<div class="control-group">
 			<div class="select" required = "required">
 		  	<label for="zendeskGSelect">Groups</label>

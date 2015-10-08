@@ -12,6 +12,11 @@
   //build a agent object for looking up a agent name from id
   var buildAgentList = function(item) {
       this.assignees[item.id] = item.name;
+      //build an array for the ticket submit pages to create dropdown list
+      this.agentDrop.push({
+        'label': '' + item.name + '',
+        'value': '' + item.id + ''
+      });
     };
   //build a list of tickets in the project
   var buildTicketList = function(item) {
@@ -101,6 +106,7 @@
     groups: {},
     assignees: {},
     ticketForms: {},
+    agentDrop: [],
     groupDrop: [],
     ticketList: [],
     createResultsData: [],
@@ -187,7 +193,7 @@
           proxy_v2: true
         };
       },
-      autocompleteRequester: function(email) {
+      autocompleteUser: function(email) {
         return {
           url: '/api/v2/users/autocomplete.json?name=' + email,
           type: 'POST',
@@ -265,7 +271,7 @@
       this.$('#userEmail').autocomplete({
         minLength: 3,
         source: function(request, response) {
-          self.ajax('autocompleteRequester', request.term).done(function(data) {
+          self.ajax('autocompleteUser', request.term).done(function(data) {
             response(_.map(data.users, function(user) {
               return {
                 "label": user.name,
@@ -278,6 +284,28 @@
           if (_.isNull(ui.item)) {
             self.$('#userName').parent().show();
             self.$('#userName').focus();
+          }
+        }
+      }, this);
+    },
+    autocompleteAssignee: function() {
+      var self = this;
+      // bypass this.form to bind the autocomplete.
+      this.$('#assigneeName').autocomplete({
+        minLength: 3,
+        source: this.agentDrop,
+        select: function(event, ui) {
+          self.$("#assigneeName").val(ui.item.label);
+          self.$("#assigneeId").val(ui.item.value);
+          return false;
+        },
+        change: function(event, ui) {
+          if (_.isNull(ui.item)) {
+            self.$("#assigneeName").val('');
+            self.$("#assigneeId").val('');
+          } else {
+            self.$("#assigneeName").val(ui.item.label);
+            self.$("#assigneeId").val(ui.item.value);
           }
         }
       }, this);
@@ -330,6 +358,9 @@
           rootTicket.ticket.requester.name = this.$('#userName').val();
         }
         rootTicket.ticket.requester.email = this.$('#userEmail').val();
+        if (!_.isEmpty(this.$('#assigneeId').val())) {
+            rootTicket.ticket.assignee_id = this.$('#assigneeId').val();
+        }
         rootTicket.ticket.group_id = group;
         rootTicket.ticket.external_id = 'Project-' + ticket.id();
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
@@ -371,6 +402,7 @@
       this.$('button.displayForm').hide();
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
+      this.autocompleteAssignee();
       this.autocompleteGroup();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
@@ -621,6 +653,7 @@
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
+      this.autocompleteAssignee();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
