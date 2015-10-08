@@ -18,6 +18,14 @@
       "settingsMap" : {
         "label": "Preset template mappings",
         "helpText": "Settings for ticket types to set groups for bulk ticket creates. It needs to be in a JSON format"
+      },
+      "defaultTicketType" : {
+        "label": "Default ticket type",
+        "helpText": "Instead of taking over the ticket type from the current ticket, use this type by default. Empty (to take over), or one of: question, incident, problem, or task."
+      },
+      "defaultTicketPriority" : {
+        "label": "Default ticket priority",
+        "helpText": "Instead of taking over the ticket priority from the current ticket, use this priority by default. Empty (to take over), or one of: low, normal, high, urgent."
       }
     }
   },

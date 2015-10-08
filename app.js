@@ -344,8 +344,8 @@
     switchToRequester: function() {
       var newSubject = this.ticket().subject();
       var currentForm = this.ticket().form().id();
-      var ticketType = this.getTicketType(this.ticket().type());
-      var ticketPri = this.getTicketPri(this.ticket().priority());
+      var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
+      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
       if (this.prependSubject) {
         newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
       }
@@ -387,19 +387,19 @@
       this.currentTicketformID = this.ticket().form().id() || this.defaultTicketFormID;
       this.projectNameFieldExist();
     },
-    getTicketType: function(type){
-    var types = [{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
+    getTicketTypes: function(selectedType){
+    var types = [{'title': '-', 'value': ''},{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
     types.forEach(function(t){
-      if(t.value === type){
+      if(t.value === selectedType){
         t.selected = true;
       }
     });
     return types;
   },
-  getTicketPri: function(type){
-    var pri = [{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
+  getTicketPrios: function(selectedPrio){
+    var pri = [{'title': '-', 'value': ''},{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
     pri.forEach(function(t){
-      if(t.value === type){
+      if(t.value === selectedPrio){
         t.selected = true;
       }
     });
@@ -599,8 +599,8 @@
       }
     },
     switchToBulk: function() {
-      var ticketType = this.getTicketType(this.ticket().type());
-      var ticketPri = this.getTicketPri(this.ticket().priority());
+      var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
+      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
       var currentForm = this.ticket().form().id();
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,

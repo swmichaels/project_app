@@ -34,7 +34,6 @@
       <div class="select" required = "required">
         <label for="zenType">Ticket Type</label>
         <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
-          <option value="">-</option>
           {{#each ticketType}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}
@@ -51,7 +50,6 @@
       <div class="select" required = "required">
         <label for="zenPri">Ticket Priority</label>
         <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
-          <option value="">-</option>
           {{#each ticketPri}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}

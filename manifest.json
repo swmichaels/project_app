@@ -18,6 +18,14 @@
 		"name": "settingsMap",
 		"type": "multiline",
 		"required": false
+	}, {
+		"name": "defaultTicketType",
+		"type": "text",
+                "required": false
+	}, {
+		"name": "defaultTicketPriority",
+		"type": "text",
+                "required": false
 	}],
 	"frameworkVersion": "1.0",
 	"location": "ticket_sidebar",
