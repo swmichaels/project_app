@@ -12,6 +12,11 @@
   //build a agent object for looking up a agent name from id
   var buildAgentList = function(item) {
       this.assignees[item.id] = item.name;
+      //build an array for the ticket submit pages to create dropdown list
+      this.agentDrop.push({
+        'label': '' + item.name + '',
+        'value': '' + item.id + ''
+      });
     };
   //build a list of tickets in the project
   var buildTicketList = function(item) {
@@ -101,6 +106,7 @@
     groups: {},
     assignees: {},
     ticketForms: {},
+    agentDrop: [],
     groupDrop: [],
     ticketList: [],
     createResultsData: [],
@@ -187,7 +193,7 @@
           proxy_v2: true
         };
       },
-      autocompleteRequester: function(email) {
+      autocompleteUser: function(email) {
         return {
           url: '/api/v2/users/autocomplete.json?name=' + email,
           type: 'POST',
@@ -265,7 +271,7 @@
       this.$('#userEmail').autocomplete({
         minLength: 3,
         source: function(request, response) {
-          self.ajax('autocompleteRequester', request.term).done(function(data) {
+          self.ajax('autocompleteUser', request.term).done(function(data) {
             response(_.map(data.users, function(user) {
               return {
                 "label": user.name,
@@ -282,19 +288,47 @@
         }
       }, this);
     },
+    autocompleteAssignee: function() {
+      var self = this;
+      // bypass this.form to bind the autocomplete.
+      this.$('#assigneeName').autocomplete({
+        minLength: 3,
+        source: this.agentDrop,
+        select: function(event, ui) {
+          self.$("#assigneeName").val(ui.item.label);
+          self.$("#assigneeId").val(ui.item.value);
+          return false;
+        },
+        change: function(event, ui) {
+          if (_.isNull(ui.item)) {
+            self.$("#assigneeName").val('');
+            self.$("#assigneeId").val('');
+          } else {
+            self.$("#assigneeName").val(ui.item.label);
+            self.$("#assigneeId").val(ui.item.value);
+          }
+        }
+      }, this);
+    },
     autocompleteGroup: function() {
       var self = this;
       // bypass this.form to bind the autocomplete.
       this.$('#zendeskGroup').autocomplete({
         minLength: 3,
         source: this.groupDrop,
-        focus: function(event, ui) {
-          self.$("#zendeskGroup").val(ui.item.label);
+        select: function(event, ui) {
+          self.$("#assigneeName").val(ui.item.label);
+          self.$("#assigneeId").val(ui.item.value);
           return false;
         },
-        select: function(event, ui) {
-          self.$("#zendeskGSelect").val(ui.item.value);
-          return false;
+        change: function(event, ui) {
+          if (_.isNull(ui.item)) {
+            self.$("#zendeskGroup").val('');
+            self.$("#zendeskGSelect").val('');
+          } else {
+            self.$("#zendeskGroup").val(ui.item.label);
+            self.$("#zendeskGSelect").val(ui.item.value);
+          }
         }
       }, this);
     },
@@ -324,6 +358,9 @@
           rootTicket.ticket.requester.name = this.$('#userName').val();
         }
         rootTicket.ticket.requester.email = this.$('#userEmail').val();
+        if (!_.isEmpty(this.$('#assigneeId').val())) {
+            rootTicket.ticket.assignee_id = this.$('#assigneeId').val();
+        }
         rootTicket.ticket.group_id = group;
         rootTicket.ticket.external_id = 'Project-' + ticket.id();
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
@@ -332,6 +369,7 @@
         fieldListArray.forEach(function(field){
           rootTicket.ticket.custom_fields[field.name] = field.value;
         }, this);
+        this.duplicateCustomFieldsValues(rootTicket.ticket);
         var childCall = JSON.stringify(rootTicket);
         this.ajax('createTicket', childCall);
       }, this);
@@ -341,22 +379,57 @@
       this.putTicketData(currentTags, 'project_parent', 'add', ticket.id());
 
     },
+    duplicateCustomFieldsValues: function(ticketObjectForApi) {
+      var me = this;
+      // Read out the ids for the desired custom fields to copy.
+      var customFieldIdsToCopySetting = me.setting('customFieldIdsToCopy') || '',
+          customFieldIdsToCopy = customFieldIdsToCopySetting.match(/\b\d+\b/g);
+      // Done if there are none.
+      if (!(customFieldIdsToCopy && customFieldIdsToCopy.length)) {
+        return;
+      }
+      
+      // Copy the value of each (existing) custom field. Don't overwrite.
+      if (!_.has(ticketObjectForApi, 'custom_fields')) {
+        ticketObjectForApi.custom_fields = {};
+      }
+      customFieldIdsToCopy.forEach(function(customFieldIdToCopy){
+        if (_.has(ticketObjectForApi.custom_fields, customFieldIdToCopy)) {
+          return;
+        }
+        ticketObjectForApi.custom_fields[customFieldIdToCopy] = me.ticket().customField('custom_field_' + customFieldIdToCopy + '');
+      });
+    },
     switchToRequester: function() {
       var newSubject = this.ticket().subject();
       var currentForm = this.ticket().form().id();
-      var ticketType = this.getTicketType(this.ticket().type());
-      var ticketPri = this.getTicketPri(this.ticket().priority());
+      var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
+      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
       if (this.prependSubject) {
         newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
       }
       if (this.appendSubject) {
         newSubject = newSubject + ' Project-' + this.ticket().id();
       }
+      var assigneeId, assigneeName, groupId, groupName;
+      if (this.setting('prefillAssignee')) {
+        if (this.ticket().assignee().user()) {
+          assigneeName = this.ticket().assignee().user().name();
+          assigneeId = this.ticket().assignee().user().id();
+        }
+        if (this.ticket().assignee().group()) {
+          groupName = this.ticket().assignee().group().name();
+          groupId = this.ticket().assignee().group().id();
+        }
+      }
       this.switchTo('requester', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
         email: this.ticket().requester().email(),
-        groups: this.groupDrop,
+        assigneeName: assigneeName,
+        assigneeId: assigneeId,
+        groupName: groupName,
+        groupId: groupId,
         subject: newSubject,
         desc: this.ticket().description(),
         ticketType: ticketType,
@@ -366,6 +439,7 @@
       this.$('button.displayForm').hide();
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
+      this.autocompleteAssignee();
       this.autocompleteGroup();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
@@ -387,19 +461,19 @@
       this.currentTicketformID = this.ticket().form().id() || this.defaultTicketFormID;
       this.projectNameFieldExist();
     },
-    getTicketType: function(type){
-    var types = [{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
+    getTicketTypes: function(selectedType){
+    var types = [{'title': '-', 'value': ''},{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
     types.forEach(function(t){
-      if(t.value === type){
+      if(t.value === selectedType){
         t.selected = true;
       }
     });
     return types;
   },
-  getTicketPri: function(type){
-    var pri = [{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
+  getTicketPrios: function(selectedPrio){
+    var pri = [{'title': '-', 'value': ''},{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
     pri.forEach(function(t){
-      if(t.value === type){
+      if(t.value === selectedPrio){
         t.selected = true;
       }
     });
@@ -599,13 +673,22 @@
       }
     },
     switchToBulk: function() {
-      var ticketType = this.getTicketType(this.ticket().type());
-      var ticketPri = this.getTicketPri(this.ticket().priority());
+      var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
+      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
       var currentForm = this.ticket().form().id();
+      var assigneeId, assigneeName;
+      if (this.setting('prefillAssignee')) {
+        if (this.ticket().assignee().user()) {
+          assigneeName = this.ticket().assignee().user().name();
+          assigneeId = this.ticket().assignee().user().id();
+        }
+      }
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
         email: this.ticket().requester().email(),
+        assigneeName: assigneeName,
+        assigneeId: assigneeId,
         groups: this.groupDrop,
         subject: this.ticket().subject(),
         desc: this.ticket().description(),
@@ -616,7 +699,7 @@
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
-      this.autocompleteGroup();
+      this.autocompleteAssignee();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){

@@ -18,6 +18,21 @@
 		"name": "settingsMap",
 		"type": "multiline",
 		"required": false
+	}, {
+		"name": "prefillAssignee",
+		"type": "checkbox"
+	}, {
+		"name": "defaultTicketType",
+		"type": "text",
+                "required": false
+	}, {
+		"name": "defaultTicketPriority",
+		"type": "text",
+                "required": false
+	}, {
+		"name": "customFieldIdsToCopy",
+		"type": "text",
+                "required": false
 	}],
 	"frameworkVersion": "1.0",
 	"location": "ticket_sidebar",

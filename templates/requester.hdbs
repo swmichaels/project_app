@@ -21,20 +21,29 @@
     </div>
 
     <div class="control-group">
-      <label for="zendeskGroup">Group</label>
-      <input type="text" placeholder="Group Name" name="zendeskGroup" id="zendeskGroup" style="width: 196px;" value=""/>
+      <label for="assigneeId">Assignee Name</label>
+      <input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" value="{{assigneeName}}"/>
     </div>
 
     <div class="control-group" style="display: none;">
-      <label for="zendeskSelect">Group Id</label>
-      <input type="text" required placeholder="Group id" name="zendeskSelect" id="zendeskSelect" value=""/>
+      <label for="assigneeId">Assignee Id</label>
+      <input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId" value="{{assigneeId}}"/>
+    </div>
+
+    <div class="control-group">
+      <label for="zendeskGroup">Group</label>
+      <input type="text" placeholder="Group Name" name="zendeskGroup" id="zendeskGroup" style="width: 196px;" value="{{groupName}}"/>
+    </div>
+
+    <div class="control-group" style="display: none;">
+      <label for="zendeskGSelect">Group Id</label>
+      <input type="text" required placeholder="Group id" name="zendeskGSelect" id="zendeskGSelect" value="{{groupId}}"/>
     </div>
 
     <div class="control-group">
       <div class="select" required = "required">
         <label for="zenType">Ticket Type</label>
         <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
-          <option value="">-</option>
           {{#each ticketType}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}
@@ -51,7 +60,6 @@
       <div class="select" required = "required">
         <label for="zenPri">Ticket Priority</label>
         <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
-          <option value="">-</option>
           {{#each ticketPri}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}
