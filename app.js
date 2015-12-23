@@ -333,7 +333,6 @@
       }, this);
     },
     createTicketValues: function() {
-      //console.log(this.$('#custom-fields :input').serializeArray());
       var fieldListArray = this.$('#custom-fields :input').serializeArray();
       var ticket = this.ticket();
       var groupSelected = [];
