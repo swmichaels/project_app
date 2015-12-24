@@ -3,7 +3,7 @@
 		<div class="control-group">
     	<div class="select" required = "required">
         <label for="zendeskForm">Ticket Form</label>
-        <select id="zendeskForm" required name="zendeskForm" onchange style="width: auto;" size="1">
+        <select id="zendeskForm" required name="zendeskForm"  style="width: auto;" size="1">
         	<option value="">-</option>
           {{#each ticketForm}}
             <option value="{{@key}}" {{#if selected}} selected="selected" {{/if}}>{{name}}</option>
@@ -35,7 +35,7 @@
 		<div class="control-group">
 			<div class="select" required = "required">
 		  	<label for="zendeskGSelect">Groups</label>
-		    <select id="zendeskGSelect" required name="zendeskGSelect" onchange style="width: auto;" size="1" multiple>
+		    <select id="zendeskGSelect" required name="zendeskGSelect"  style="width: auto;" size="1" multiple>
 				{{#each groups}}
 		    	<option value="{{value}}">{{label}}</option>
 				{{/each}}
@@ -46,7 +46,7 @@
 		<div class="control-group">
     	<div class="select" required = "required">
       	<label for="zenType">Ticket Type</label>
-        <select id="zenType" required name="zenType" onchange style="width: auto;" size="1">
+        <select id="zenType" required name="zenType"  style="width: auto;" size="1">
           {{#each ticketType}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}
@@ -62,7 +62,7 @@
 		<div class="control-group">
 			<div class="select" required = "required">
       	<label for="zenPri">Ticket Priority</label>
-        <select id="zenPri" required name="zenPri" onchange style="width: auto;" size="1">
+        <select id="zenPri" required name="zenPri"  style="width: auto;" size="1">
           {{#each ticketPri}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
           {{/each}}

@@ -1,8 +1,9 @@
 {
   "name": "Project App",
 	"author": {
-		"name": "Zendesk Labs",
-		"email": "zendesklabs@zendesk.com"
+		"name": "Services",
+		"email": "services@zendesk123.com",
+		"url": "https://www.zendesk.com"
 	},
 	"parameters": [{
 		"name": "Custom_Field_ID",
@@ -38,6 +39,6 @@
 	"location": "ticket_sidebar",
 	"defaultLocale": "en",
 	"private": false,
-	"version": "0.8",
+	"version": "0.8.1",
 	"singleInstall": true
 }

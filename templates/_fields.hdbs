@@ -24,7 +24,7 @@
       <input type="text" name="{{id}}" id="{{id}}" style="width: 196px" pattern="{{regexp_for_validation}}" placeholder="{{raw_description}}"/>
     {{else}}
     {{#if tagger}}
-      <select id="{{id}}" required name="{{id}}" onchange style="width: auto;" size="1">
+      <select id="{{id}}" required name="{{id}}"  style="width: auto;" size="1">
         <option value="">-</option>
         {{#each custom_field_options}}
           <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{name}}</option>
