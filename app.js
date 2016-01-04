@@ -100,7 +100,6 @@
   return {
     appID: 'ProjectApp',
     defaultState: 'noproject',
-    name: '',
     prependSubject: '',
     appendSubject: '',
     groups: {},
@@ -238,7 +237,6 @@
 
     init: function() {
       this.getTicketFormData(1);
-      this.getProjectData();
     },
 
     setGroups: function(arrGroups){
@@ -317,8 +315,8 @@
         minLength: 3,
         source: this.groupDrop,
         select: function(event, ui) {
-          self.$("#assigneeName").val(ui.item.label);
-          self.$("#assigneeId").val(ui.item.value);
+          self.$("#zendeskGroup").val(ui.item.label);
+          self.$("#zendeskGSelect").val(ui.item.value);
           return false;
         },
         change: function(event, ui) {
@@ -547,31 +545,23 @@
       }
     },
     getGroupsData: function(page) {
-      if (page === 1 && Object.keys(this.groups).length > 0) {
-        return;
-      }
       this.ajax('getGroups', page);
     },
-    processGroups: function(data) {
-      var nextPage = 1;
+    processGroups: function(data) {      
       _.each(data.groups, buildGroupList, this);
       if (data.next_page !== null) {
-        nextPage = nextPage + 1;
-        this.getGroupsData(nextPage);
+        var nextPage = data.next_page.split('=');
+        this.getGroupsData(nextPage[1]);
       }
     },
     getAgentData: function(page) {
-      if (page === 1 && Object.keys(this.assignees).length > 0) {
-        return;
-      }
       this.ajax('getAgents', page);
     },
-    processAgents: function(data) {
-      var nextPage = 1;
+    processAgents: function(data) {    
       _.each(data.users, buildAgentList, this);
       if (data.next_page !== null) {
-        nextPage = nextPage + 1;
-        this.getAgentData(nextPage);
+        var nextPage = data.next_page.split('=');
+        this.getAgentData(nextPage[1]);
       }
     },
 
