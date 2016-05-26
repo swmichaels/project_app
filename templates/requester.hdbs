@@ -1,7 +1,7 @@
 <div class="row-fluid">
 	<div class="well span12">
     <div class="control-group">
-      <label for="zendeskForm">Ticket Form</label>
+      <label for="zendeskForm">{{t "form.ticketForm"}}</label>
       <select id="zendeskForm" required name="zendeskForm"  style="width: auto;" size="1">
         <option value="">-</option>
         {{#each ticketForm}}
@@ -11,27 +11,17 @@
     </div>
 
     <div class="control-group">
-      <label for="userEmail">Requester</label>
+      <label for="userEmail">{{t "form.requester"}}</label>
       <input type="email" required placeholder="me@example.com" name="userEmail" id="userEmail" style="width: 196px" value="{{email}}"/>
     </div>
 
     <div class="control-group" style="display: none;">
-      <label for="userName">Requester Name</label>
+      <label for="userName">{{t "form.requesterName"}}</label>
       <input type="text" required placeholder="Requester Name" name="userName" id="userName" style="width: 196px;" value=""/>
     </div>
 
     <div class="control-group">
-      <label for="assigneeId">Assignee Name</label>
-      <input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" value="{{assigneeName}}"/>
-    </div>
-
-    <div class="control-group" style="display: none;">
-      <label for="assigneeId">Assignee Id</label>
-      <input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId" value="{{assigneeId}}"/>
-    </div>
-
-    <div class="control-group">
-      <label for="zendeskGroup">Group</label>
+      <label for="zendeskGroup">{{t "form.group"}}</label>
       <input type="text" placeholder="Group Name" name="zendeskGroup" id="zendeskGroup" style="width: 196px;" value="{{groupName}}"/>
     </div>
 
@@ -39,26 +29,33 @@
       <label for="zendeskGSelect">Group Id</label>
       <input type="text" required placeholder="Group id" name="zendeskGSelect" id="zendeskGSelect" value="{{groupId}}"/>
     </div>
+		<div class="control-group">
+			<label for="assigneeId">{{t "form.assignName"}}</label>
+			<input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" value="{{assigneeName}}"/>
+		</div>
 
-    <div class="control-group">
-      <div class="select" required = "required">
-        <label for="zenType">Ticket Type</label>
-        <select id="zenType" required name="zenType"  style="width: auto;" size="1">
-          {{#each ticketType}}
-            <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
-          {{/each}}
-        </select>
-      </div>
-    </div>
-
+		<div class="control-group" style="display: none;">
+			<label for="assigneeId">Assignee Id</label>
+			<input type="text" placeholder="Assignee id" name="assigneeId" id="assigneeId" value="{{assigneeId}}"/>
+		</div>
+		<div class="control-group">
+			<div class="select" required = "required">
+				<label for="zenType">{{t "form.ticketType"}}</label>
+				<select id="zenType" required name="zenType"  style="width: auto;" size="1">
+					{{#each ticketType}}
+						<option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
+					{{/each}}
+				</select>
+			</div>
+		</div>
     <div class="control-group" style="display: none;">
-      <label for="dueDate">Due Date</label>
+      <label for="dueDate">{{t "form.dueDate"}}</label>
       <input type="text" required placeholder="Due Date" name="dueDate" id="dueDate" style="width: 196px;" value=""/>
     </div>
 
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="select" required = "required">
-        <label for="zenPri">Ticket Priority</label>
+        <label for="zenPri">{{t "form.tickPri"}}</label>
         <select id="zenPri" required name="zenPri"  style="width: auto;" size="1">
           {{#each ticketPri}}
             <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{title}}</option>
@@ -66,19 +63,20 @@
         </select>
       </div>
     </div>
+    -->
 
     <div class="control-group">
-      <label for="userSub">Subject</label>
-      <input required placeholder="Enter Subject" type="text" name="userSub" id="userSub" style="width: 196px" value="{{subject}}"/>
+      <label for="userSub">{{t "form.subject"}}</label>
+      <input required placeholder="{{t "form.subjPlace"}}" type="text" name="userSub" id="userSub" style="width: 196px" value="{{subject}}"/>
     </div>
 
     <div class="control-group">
-      <label for="ticketDesc">Description</label>
-      <textarea required="required" rows="10" name="ticketDesc" id="ticketDesc" style="width: 196px" placeholder="Please Describe the issue">{{desc}}</textarea>
+      <label for="ticketDesc">{{t "form.description"}}</label>
+      <textarea required="required" rows="10" name="ticketDesc" id="ticketDesc" style="width: 196px" placeholder="{{t "form.descPlace"}}">{{desc}}</textarea>
     </div>
 
     <div class="control-group">
-      <button class='submitSpoke ember-view btn'>Create Single Ticket</button>
+      <button class='submitSpoke ember-view btn'>{{t "form.btnCreateSigle"}}</button>
     </div>
   </div>
 </div>

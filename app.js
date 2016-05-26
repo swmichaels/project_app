@@ -11,21 +11,26 @@
     };
   //build a agent object for looking up a agent name from id
   var buildAgentList = function(item) {
+    if(item.role !== 'end-user'){
       this.assignees[item.id] = item.name;
       //build an array for the ticket submit pages to create dropdown list
       this.agentDrop.push({
         'label': '' + item.name + '',
         'value': '' + item.id + ''
       });
+    }
     };
   //build a list of tickets in the project
   var buildTicketList = function(item) {
+    var projectTagItem = item.tags.contains('project_'+item.external_id);
+    if(!projectTagItem){return;}
       //push a objects into a array for the ticket list page
       var type = (item.type == null ? '-' : item.type);
       var priority = (item.priority == null ? '-' : item.priority);
       var list = {
         'id': '' + item.id + '',
-        'status': '' + item.status + '',
+        'status': ''+item.status + '',
+        'statusTitle': '' + this.I18n.t('status.'+item.status) + '',
         'priority': '' + priority + '',
         'type': '' + type + '',
         'assignee_id': '' + this.assigneeName(item.assignee_id) + '',
@@ -69,6 +74,9 @@
             item.textarea = true;
             break;
           case 'tagger':
+            item.tagger = true;
+            break;
+          case 'basic_priority':
             item.tagger = true;
             break;
           case 'checkbox':
@@ -117,6 +125,7 @@
     ticketFieldList: [],
     ticketFieldObj: [],
     currentTicket: {},
+    assignable: [],
 
     events: {
       // Lifecycle
@@ -137,11 +146,12 @@
       'click .removeTicket': 'removeFrom',
       'change #zendeskForm': 'formSelected',
       'change #zenType': 'showDate',
+      'focus #assigneeName': 'assignableAgents',
 
       // Requests
       'createTicket.done': 'processData',
       'getGroups.done': 'processGroups',
-      'getAgents.done': 'processAgents',
+      'autocompleteAgent.done': 'processAgents',
       'getTicketForms.done': 'processTicketForms',
       'getTicketForms.fail': 'getTicketFieldsData',
       'getExternalID.done': 'findProjects',
@@ -167,7 +177,7 @@
       },
       getGroups: function(page) {
         return {
-          url: '/api/v2/groups.json?page=' + page,
+          url: '/api/v2/groups/assignable.json?page=' + page,
           dataType: 'JSON',
           type: 'GET',
           proxy_v2: true
@@ -199,27 +209,34 @@
           proxy_v2: true
         };
       },
+      autocompleteAgent: function(group) {
+        return {
+          url: '/api/v2/groups/'+group+'/memberships.json?include=users',
+          type: 'GET',
+          proxy_v2: true
+        };
+      },
       searchExternalID: function(data, page) {
         return {
-          url: '/api/v2/tickets.json?external_id=' + data + '&page=' + page + '&per_page=50',
+          url: '/api/v2/tickets.json?external_id=' + data + '&include=users,groups&page=' + page + '&per_page=50&lang='+this.currentUser().locale(),
           dataType: 'JSON',
           type: 'GET',
           contentType: 'application/json',
           proxy_v2: true
         };
       },
-      getAgents: function(page) {
-        return {
-          url: '/api/v2/users.json?page=' + page + '&role%5B%5D=4&role%5B%5D=2',
-          dataType: 'JSON',
-          type: 'GET',
-          proxy_v2: true
-        };
-      },
+      // getAgents: function(page) {
+      //   return {
+      //     url: '/api/v2/users.json?page=' + page + '&role%5B%5D=4&role%5B%5D=2',
+      //     dataType: 'JSON',
+      //     type: 'GET',
+      //     proxy_v2: true
+      //   };
+      // },
 
       getTicketForms: function() {
         return {
-          url: '/api/v2/ticket_forms.json',
+          url: '/api/v2/ticket_forms.json?lang='+this.currentUser().locale(),
           dataType: 'JSON',
           type: 'GET',
           proxy_v2: true
@@ -227,7 +244,7 @@
       },
       getTicketFields: function() {
         return {
-          url: '/api/v2/ticket_fields.json',
+          url: '/api/v2/ticket_fields.json?lang='+this.currentUser().locale(),
           dataType: 'JSON',
           type: 'GET',
           proxy_v2: true
@@ -288,10 +305,11 @@
     },
     autocompleteAssignee: function() {
       var self = this;
+      console.log('assingee auto fired', this.assignable);
       // bypass this.form to bind the autocomplete.
       this.$('#assigneeName').autocomplete({
         minLength: 3,
-        source: this.agentDrop,
+        source: this.assignable,
         select: function(event, ui) {
           self.$("#assigneeName").val(ui.item.label);
           self.$("#assigneeId").val(ui.item.value);
@@ -359,7 +377,8 @@
             rootTicket.ticket.assignee_id = this.$('#assigneeId').val();
         }
         rootTicket.ticket.group_id = group;
-        rootTicket.ticket.external_id = 'Project-' + ticket.id();
+        //rootTicket.ticket.external_id = 'Project-' + ticket.id();
+        rootTicket.ticket.external_id = ticket.id();
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
         rootTicket.ticket.custom_fields = {};
         rootTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + ticket.id();
@@ -385,7 +404,7 @@
       if (!(customFieldIdsToCopy && customFieldIdsToCopy.length)) {
         return;
       }
-      
+
       // Copy the value of each (existing) custom field. Don't overwrite.
       if (!_.has(ticketObjectForApi, 'custom_fields')) {
         ticketObjectForApi.custom_fields = {};
@@ -422,7 +441,7 @@
       this.switchTo('requester', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: this.ticket().requester().email(),
+        email: '',
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groupName: groupName,
@@ -436,7 +455,6 @@
       this.$('button.displayForm').hide();
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
-      this.autocompleteAssignee();
       this.autocompleteGroup();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
@@ -448,7 +466,7 @@
       //get all the groups
       this.getGroupsData(1);
       //get all the agents in the system V2 API
-      this.getAgentData(1);
+      // this.getAgentData(1);
       this.prependSubject = this.settings.prependSubject;
       this.appendSubject = this.settings.appendSubject;
       //get the exteranl API on the currently viewed ticket
@@ -459,7 +477,7 @@
       this.projectNameFieldExist();
     },
     getTicketTypes: function(selectedType){
-    var types = [{'title': '-', 'value': ''},{'title': 'Question', 'value': 'question'},{'title': 'Incident', 'value': 'incident'},{'title': 'Problem', 'value': 'problem'},{'title': 'Task', 'value': 'task'}];
+    var types = [{'title': '-', 'value': ''},{'title': ''+this.I18n.t('type.question')+'', 'value': 'question'},{'title': ''+this.I18n.t('type.incident')+'', 'value': 'incident'},{'title': ''+this.I18n.t('type.problem')+'', 'value': 'problem'},{'title': ''+this.I18n.t('type.task')+'', 'value': 'task'}];
     types.forEach(function(t){
       if(t.value === selectedType){
         t.selected = true;
@@ -468,7 +486,7 @@
     return types;
   },
   getTicketPrios: function(selectedPrio){
-    var pri = [{'title': '-', 'value': ''},{'title': 'Low', 'value': 'low'},{'title': 'Normal', 'value': 'normal'},{'title': 'High', 'value': 'high'},{'title': 'Urgent', 'value': 'urgent'}];
+    var pri = [{'title': '-', 'value': ''},{'title': ''+this.I18n.t('priority.low')+'', 'value': 'low'},{'title': ''+this.I18n.t('priority.normal')+'', 'value': 'normal'},{'title': ''+this.I18n.t('priority.high')+'', 'value': 'high'},{'title': ''+this.I18n.t('priority.urgent')+'', 'value': 'urgent'}];
     pri.forEach(function(t){
       if(t.value === selectedPrio){
         t.selected = true;
@@ -507,6 +525,8 @@
       this.ajax('searchExternalID', externalID, page);
     },
     listProjects: function(data) {
+      _.each(data.users, buildAgentList, this);
+      _.each(data.groups, buildGroupList, this);
       this.ticketList = [];
       var nextPage = 1;
       var btnClicked = (data.type === 'click');
@@ -518,6 +538,7 @@
           this.getProjectSearch(data.ticket[0].external_id, nextPage);
         }
       }
+
       this.switchTo('list', {
         projects: this.ticketList
       });
@@ -547,18 +568,24 @@
     getGroupsData: function(page) {
       this.ajax('getGroups', page);
     },
-    processGroups: function(data) {      
+    processGroups: function(data) {
       _.each(data.groups, buildGroupList, this);
       if (data.next_page !== null) {
         var nextPage = data.next_page.split('=');
         this.getGroupsData(nextPage[1]);
       }
     },
-    getAgentData: function(page) {
-      this.ajax('getAgents', page);
-    },
-    processAgents: function(data) {    
-      _.each(data.users, buildAgentList, this);
+    // getAgentData: function(page) {
+    //   this.ajax('getAgents', page);
+    // },
+    processAgents: function(data) {
+      this.assignable = _.map(data.users, function(user) {
+        return {
+          "label": user.name,
+          "value": user.id
+        };
+      });
+      this.autocompleteAssignee();
       if (data.next_page !== null) {
         var nextPage = data.next_page.split('=');
         this.getAgentData(nextPage[1]);
@@ -675,7 +702,7 @@
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: this.ticket().requester().email(),
+        email: '',
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groups: this.groupDrop,
@@ -688,7 +715,6 @@
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
-      this.autocompleteAssignee();
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
@@ -732,9 +758,8 @@
     },
     putTicketData: function(tags, linking, type, data) {
       var ticketTags = tags,
-        isParent = (_.indexOf(ticketTags, 'project_parent') !== -1),
+        isParent = (_.indexOf(ticketTags, 'project_parent') !== -1 || linking === 'project_parent'),
         ticketUpdateID, updateTicket = {};
-
       if (_.isObject(data)) {
         ticketUpdateID = data.ticket.id;
       } else {
@@ -743,17 +768,18 @@
       updateTicket.ticket = {};
       updateTicket.ticket.custom_fields = {};
       updateTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + this.ticket().id();
-      updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
+      updateTicket.ticket.external_id = this.ticket().id();
       if (!isParent && type === 'add') {
         ticketTags.push(linking, 'project_' + this.ticket().id());
       } else if (!isParent && type === 'remove') {
-        var projectTag = data.ticket.external_id.replace(/-/i, '_').toLowerCase();
+        var projectTag = 'project_'+data.ticket.external_id;
         ticketTags.splice(_.indexOf(tags, "project_child"), 1);
         ticketTags.splice(_.indexOf(tags, projectTag), 1);
         updateTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = '';
         updateTicket.ticket.external_id = '';
       } else {
         ticketTags.push(linking, 'project_' + this.ticket().id());
+        updateTicket.ticket.status = 'hold';
       }
       updateTicket.ticket.tags = ticketTags;
       var thisTicket = JSON.stringify(updateTicket);
@@ -761,6 +787,10 @@
         this.processData();
       });
 
+    },
+    // builds a list of agents for
+    assignableAgents: function() {
+      this.ajax('autocompleteAgent',this.$("#zendeskGSelect").val());
     },
     // Triggered whenever a ticket had a status change
     ticketStatusChangedHandler: function(){
