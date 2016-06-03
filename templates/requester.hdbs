@@ -31,7 +31,7 @@
     </div>
 		<div class="control-group">
 			<label for="assigneeId">{{t "form.assignName"}}</label>
-			<input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" value="{{assigneeName}}"/>
+			<input type="text" placeholder="Assignee" name="assigneeName" id="assigneeName" style="width: 196px" disabled="disabled" value="{{assigneeName}}" />
 		</div>
 
 		<div class="control-group" style="display: none;">

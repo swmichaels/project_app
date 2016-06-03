@@ -2,16 +2,18 @@
 
   //build a group object for looking up a group name from id
   var buildGroupList = function(item) {
+    if(this.groups[item.id] === undefined){
       this.groups[item.id] = item.name;
       //build an array for the ticket submit pages to create dropdown list
       this.groupDrop.push({
         'label': '' + item.name + '',
         'value': '' + item.id + ''
       });
+    }
     };
   //build a agent object for looking up a agent name from id
   var buildAgentList = function(item) {
-    if(item.role !== 'end-user'){
+    if(item.role !== 'end-user' && this.assignees[item.id] === undefined){
       this.assignees[item.id] = item.name;
       //build an array for the ticket submit pages to create dropdown list
       this.agentDrop.push({
@@ -146,10 +148,11 @@
       'click .removeTicket': 'removeFrom',
       'change #zendeskForm': 'formSelected',
       'change #zenType': 'showDate',
-      'focus #assigneeName': 'assignableAgents',
+      'blur #zendeskGroup': 'assignableAgents',
 
       // Requests
       'createTicket.done': 'processData',
+      'createTicket.fail':'createChildFail',
       'getGroups.done': 'processGroups',
       'autocompleteAgent.done': 'processAgents',
       'getTicketForms.done': 'processTicketForms',
@@ -209,9 +212,9 @@
           proxy_v2: true
         };
       },
-      autocompleteAgent: function(group) {
+      autocompleteAgent: function(group,page) {
         return {
-          url: '/api/v2/groups/'+group+'/memberships.json?include=users',
+          url: '/api/v2/groups/'+group+'/memberships.json?include=users&page='+page,
           type: 'GET',
           proxy_v2: true
         };
@@ -267,8 +270,9 @@
       });
     },
     processData: function(data, response, responseText) {
-      this.ticket().tags().add(['project_parent', 'project_' + this.ticket().id()]);
-      this.ticket().customField('custom_field_' + this.settings.Custom_Field_ID + '', 'Project-' + this.ticket().id());
+      var locTicket = this.ticket();
+      locTicket.tags().add(['project_parent', 'project_' + this.ticket().id()]);
+      locTicket.customField('custom_field_' + this.settings.Custom_Field_ID + '', 'Project-' + this.ticket().id());
       if(data !== undefined) {
       this.createResultsData.push({
         'id': '' + data.ticket.id + '',
@@ -277,8 +281,14 @@
       this.switchTo('description', {
         createResult: this.createResultsData
       });
-
+      var currentTags = locTicket.tags();
+      this.putTicketData(currentTags, 'project_parent', 'add', locTicket.id());
       }
+
+    },
+    createChildFail: function(data, response, responseText) {
+      var msg = data.responseJSON.description + '<br>' + data.responseJSON.details.requester[0].description;
+      services.notify(msg, 'error');
     },
     autocompleteRequesterEmail: function() {
       var self = this;
@@ -305,7 +315,6 @@
     },
     autocompleteAssignee: function() {
       var self = this;
-      console.log('assingee auto fired', this.assignable);
       // bypass this.form to bind the autocomplete.
       this.$('#assigneeName').autocomplete({
         minLength: 3,
@@ -377,8 +386,7 @@
             rootTicket.ticket.assignee_id = this.$('#assigneeId').val();
         }
         rootTicket.ticket.group_id = group;
-        //rootTicket.ticket.external_id = 'Project-' + ticket.id();
-        rootTicket.ticket.external_id = ticket.id();
+        rootTicket.ticket.external_id = 'Project-' + ticket.id();
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
         rootTicket.ticket.custom_fields = {};
         rootTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + ticket.id();
@@ -391,8 +399,6 @@
       }, this);
       //for the future
       //ticket.external_id('Project-' + ticket.id());
-      var currentTags = this.ticket().tags();
-      this.putTicketData(currentTags, 'project_parent', 'add', ticket.id());
 
     },
     duplicateCustomFieldsValues: function(ticketObjectForApi) {
@@ -451,6 +457,9 @@
         ticketType: ticketType,
         ticketPri: ticketPri
       });
+      if(groupId){
+        this.assignableAgents();
+      }
       this.$('button.displayList').show();
       this.$('button.displayForm').hide();
       this.$('button.displayMultiCreate').show();
@@ -575,20 +584,20 @@
         this.getGroupsData(nextPage[1]);
       }
     },
-    // getAgentData: function(page) {
-    //   this.ajax('getAgents', page);
-    // },
     processAgents: function(data) {
+      this.$('#assigneeName').attr('class', "spinner dotted");
       this.assignable = _.map(data.users, function(user) {
         return {
           "label": user.name,
           "value": user.id
         };
       });
-      this.autocompleteAssignee();
       if (data.next_page !== null) {
-        var nextPage = data.next_page.split('=');
-        this.getAgentData(nextPage[1]);
+        var nextPage = data.next_page.split('&page=');
+        this.ajax('autocompleteAgent',this.$("#zendeskGSelect").val(), nextPage[1]);
+      } else {
+        this.autocompleteAssignee();
+        this.$('#assigneeName').attr('disabled', false).removeClass( "spinner dotted" );
       }
     },
 
@@ -768,7 +777,7 @@
       updateTicket.ticket = {};
       updateTicket.ticket.custom_fields = {};
       updateTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + this.ticket().id();
-      updateTicket.ticket.external_id = this.ticket().id();
+      updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
       if (!isParent && type === 'add') {
         ticketTags.push(linking, 'project_' + this.ticket().id());
       } else if (!isParent && type === 'remove') {
@@ -790,7 +799,7 @@
     },
     // builds a list of agents for
     assignableAgents: function() {
-      this.ajax('autocompleteAgent',this.$("#zendeskGSelect").val());
+      this.ajax('autocompleteAgent',this.$("#zendeskGSelect").val(), 1);
     },
     // Triggered whenever a ticket had a status change
     ticketStatusChangedHandler: function(){
