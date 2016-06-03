@@ -386,8 +386,7 @@
             rootTicket.ticket.assignee_id = this.$('#assigneeId').val();
         }
         rootTicket.ticket.group_id = group;
-        //rootTicket.ticket.external_id = 'Project-' + ticket.id();
-        rootTicket.ticket.external_id = ticket.id();
+        rootTicket.ticket.external_id = 'Project-' + ticket.id();
         rootTicket.ticket.tags = ['project_child', 'project_' + ticket.id()];
         rootTicket.ticket.custom_fields = {};
         rootTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + ticket.id();
@@ -778,7 +777,7 @@
       updateTicket.ticket = {};
       updateTicket.ticket.custom_fields = {};
       updateTicket.ticket.custom_fields[this.settings.Custom_Field_ID] = 'Project-' + this.ticket().id();
-      updateTicket.ticket.external_id = this.ticket().id();
+      updateTicket.ticket.external_id = 'Project-' + this.ticket().id();
       if (!isParent && type === 'add') {
         ticketTags.push(linking, 'project_' + this.ticket().id());
       } else if (!isParent && type === 'remove') {

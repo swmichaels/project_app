@@ -87,7 +87,7 @@
   "priority":{
     "low": "Low",
     "normal": "Normal",
-    "high": "High", 
+    "high": "High",
     "urgent": "Urgent"
   },
   "type":{
