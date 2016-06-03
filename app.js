@@ -24,7 +24,8 @@
     };
   //build a list of tickets in the project
   var buildTicketList = function(item) {
-    var projectTagItem = item.tags.contains('project_'+item.external_id);
+    var projectTag = item.external_id.replace(/-/i, '_').toLowerCase();
+    var projectTagItem = item.tags.contains(projectTag);
     if(!projectTagItem){return;}
       //push a objects into a array for the ticket list page
       var type = (item.type == null ? '-' : item.type);
@@ -447,7 +448,7 @@
       this.switchTo('requester', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: '',
+        email: this.ticket().requester().email(),
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groupName: groupName,
@@ -547,7 +548,6 @@
           this.getProjectSearch(data.ticket[0].external_id, nextPage);
         }
       }
-
       this.switchTo('list', {
         projects: this.ticketList
       });
@@ -788,7 +788,6 @@
         updateTicket.ticket.external_id = '';
       } else {
         ticketTags.push(linking, 'project_' + this.ticket().id());
-        updateTicket.ticket.status = 'hold';
       }
       updateTicket.ticket.tags = ticketTags;
       var thisTicket = JSON.stringify(updateTicket);
