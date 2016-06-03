@@ -448,7 +448,7 @@
       this.switchTo('requester', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: '',
+        email: this.ticket().requester().email(),
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groupName: groupName,
