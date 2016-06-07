@@ -129,6 +129,7 @@
     ticketFieldObj: [],
     currentTicket: {},
     assignable: [],
+    notEnterprise: false,
 
     events: {
       // Lifecycle
@@ -466,6 +467,10 @@
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
+      if (this.notEnterprise) {
+        this.$('#zendeskForm').val(1);
+        this.$('#zendeskForm').parent().hide();
+      }
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
@@ -653,7 +658,12 @@
       }, this);
     },
     getTicketFieldsData: function(page){
+      this.notEnterprise = _.isEmpty(this.ticketForms);
       this.ajax('getTicketFields', page);
+      if(this.notEnterprise){
+        this.getProjectData();
+      }
+
     },
     updateList: function() {
       this.ajax('getExternalID', this.ticket().id());
@@ -724,6 +734,10 @@
       this.$('button.displayForm').show();
       this.$('button.displayMultiCreate').hide();
       this.autocompleteRequesterEmail();
+      if (this.notEnterprise) {
+        this.$('#zendeskForm').val(1);
+        this.$('#zendeskForm').parent().hide();
+      }
       this.$('#zendeskForm').change();
       this.$('#dueDate').val(this.currentTicket.ticket.due_at).datepicker({ dateFormat: 'yy-mm-dd' });
       if(this.$('#zenType').val() === 'task'){
