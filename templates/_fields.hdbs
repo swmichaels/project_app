@@ -34,14 +34,14 @@
         {{/each}}
       </select>
     {{else}}
-    {{!-- {{#if pri}}
+    {{#if pri}}
       <select id="zenPri" required = "required" name="zenPri"  style="width: auto;" size="1">
         <option value="">-</option>
         {{#each system_field_options}}
           <option value="{{value}}" {{#if selected}} selected="selected" {{/if}}>{{name}}</option>
         {{/each}}
       </select>
-    {{/if}} --}}
+    {{/if}}
     {{/if}}
     {{/if}}
     {{/if}}
