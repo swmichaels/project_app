@@ -82,6 +82,9 @@
           case 'basic_priority':
             item.tagger = true;
             break;
+          case 'priority':
+            item.tagger = true;
+            break;
           case 'checkbox':
             item.checkbox = true;
             break;
@@ -428,7 +431,7 @@
       var newSubject = this.ticket().subject();
       var currentForm = this.ticket().form().id();
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
-      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
+      var ticketPri = this.setting('defaultTicketPriority' || this.ticket().priority());
       if (this.prependSubject) {
         newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
       }
@@ -631,7 +634,7 @@
         var selectedFormArray = this.ticketForms[this.$('#zendeskForm').val()];
         this.ticketFieldObj.forEach(function(d){
           if(_.contains(selectedFormArray, d.id)){
-            if(d.type != "tickettype" && d.type != "priority") {
+            if(d.type != "tickettype") {
               this.displayFields.push(d);
             }
           }
@@ -709,7 +712,7 @@
     },
     switchToBulk: function() {
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
-      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
+      var ticketPri = this.setting('defaultTicketPriority' || this.ticket().priority());
       var currentForm = this.ticket().form().id();
       var assigneeId, assigneeName;
       if (this.setting('prefillAssignee')) {
@@ -721,7 +724,7 @@
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: '',
+        email: this.ticket().requester().email(),
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groups: this.groupDrop,
