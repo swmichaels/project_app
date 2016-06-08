@@ -80,7 +80,10 @@
             item.tagger = true;
             break;
           case 'basic_priority':
-            item.tagger = true;
+            item.pri = true;
+            break;
+          case 'priority':
+            item.pri = true;
             break;
           case 'checkbox':
             item.checkbox = true;
@@ -428,7 +431,7 @@
       var newSubject = this.ticket().subject();
       var currentForm = this.ticket().form().id();
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
-      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
+      //var ticketPri = this.setting('defaultTicketPriority' || this.ticket().priority());
       if (this.prependSubject) {
         newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
       }
@@ -456,8 +459,7 @@
         groupId: groupId,
         subject: newSubject,
         desc: this.ticket().description(),
-        ticketType: ticketType,
-        ticketPri: ticketPri
+        ticketType: ticketType
       });
       if(groupId){
         this.assignableAgents();
@@ -499,15 +501,6 @@
       }
     });
     return types;
-  },
-  getTicketPrios: function(selectedPrio){
-    var pri = [{'title': '-', 'value': ''},{'title': ''+this.I18n.t('priority.low')+'', 'value': 'low'},{'title': ''+this.I18n.t('priority.normal')+'', 'value': 'normal'},{'title': ''+this.I18n.t('priority.high')+'', 'value': 'high'},{'title': ''+this.I18n.t('priority.urgent')+'', 'value': 'urgent'}];
-    pri.forEach(function(t){
-      if(t.value === selectedPrio){
-        t.selected = true;
-      }
-    });
-    return pri;
   },
     // check to see if the custom field for "project name" exist in current form or not
     projectNameFieldExist: function() {
@@ -631,7 +624,7 @@
         var selectedFormArray = this.ticketForms[this.$('#zendeskForm').val()];
         this.ticketFieldObj.forEach(function(d){
           if(_.contains(selectedFormArray, d.id)){
-            if(d.type != "tickettype" && d.type != "priority") {
+            if(d.type != "tickettype") {
               this.displayFields.push(d);
             }
           }
@@ -649,13 +642,14 @@
       var fieldListArray = this.$('#custom-fields :input').serializeArray();
       //go through the array of current custom fields.
       fieldListArray.forEach(function(t){
-
         this.currentTicket.ticket.custom_fields.forEach(function(x){
           if(this.$('#' + x.id )){
             this.$('#' + x.id ).val(x.value);
           }
         }, this);
       }, this);
+      var priSetting = this.setting('defaultTicketPriority') || this.ticket().priority();
+      this.$('#zenPri').val(priSetting);
     },
     getTicketFieldsData: function(page){
       this.notEnterprise = _.isEmpty(this.ticketForms);
@@ -709,7 +703,7 @@
     },
     switchToBulk: function() {
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
-      var ticketPri = this.getTicketPrios(this.setting('defaultTicketPriority') || this.ticket().priority());
+      //var ticketPri = this.setting('defaultTicketPriority' || this.ticket().priority());
       var currentForm = this.ticket().form().id();
       var assigneeId, assigneeName;
       if (this.setting('prefillAssignee')) {
@@ -721,14 +715,13 @@
       this.switchTo('multicreate', {
         ticketForm: this.ticketForms,
         currentForm: currentForm,
-        email: '',
+        email: this.ticket().requester().email(),
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groups: this.groupDrop,
         subject: this.ticket().subject(),
         desc: this.ticket().description(),
-        ticketType: ticketType,
-        ticketPri: ticketPri
+        ticketType: ticketType
       });
       this.$('button.displayList').show();
       this.$('button.displayForm').show();
