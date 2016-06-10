@@ -461,9 +461,7 @@
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
-      console.log('this.notEnterprise',this.notEnterprise);
       if (this.notEnterprise) {
-        console.log('not Enter');
         this.$('#zendeskForm').val(1);
         this.$('#zendeskForm').parent().hide();
       }
