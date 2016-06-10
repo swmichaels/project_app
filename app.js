@@ -161,7 +161,7 @@
       'getGroups.done': 'processGroups',
       'autocompleteAgent.done': 'processAgents',
       'getTicketForms.done': 'processTicketForms',
-      'getTicketForms.fail': 'getTicketFieldsData',
+      'getTicketForms.fail': 'failTicketForms',
       'getExternalID.done': 'findProjects',
       'getTicketFields.done': 'processTicketFields',
       'searchExternalID.done': function(data) {
@@ -233,14 +233,6 @@
           proxy_v2: true
         };
       },
-      // getAgents: function(page) {
-      //   return {
-      //     url: '/api/v2/users.json?page=' + page + '&role%5B%5D=4&role%5B%5D=2',
-      //     dataType: 'JSON',
-      //     type: 'GET',
-      //     proxy_v2: true
-      //   };
-      // },
 
       getTicketForms: function() {
         return {
@@ -469,7 +461,9 @@
       this.$('button.displayMultiCreate').show();
       this.autocompleteRequesterEmail();
       this.autocompleteGroup();
+      console.log('this.notEnterprise',this.notEnterprise);
       if (this.notEnterprise) {
+        console.log('not Enter');
         this.$('#zendeskForm').val(1);
         this.$('#zendeskForm').parent().hide();
       }
@@ -613,6 +607,11 @@
         this.getProjectData();
       }
     },
+    failTicketForms: function(){
+      this.notEnterprise = true;
+      this.getTicketFieldsData(1);
+      this.getProjectData();
+    },
     processTicketFields: function(data){
       var nextPage = 1;
       _.each(data.ticket_fields, buildTicketFieldList, this);
@@ -652,12 +651,7 @@
       this.$('#zenPri').val(priSetting);
     },
     getTicketFieldsData: function(page){
-      this.notEnterprise = _.isEmpty(this.ticketForms);
       this.ajax('getTicketFields', page);
-      if(this.notEnterprise){
-        this.getProjectData();
-      }
-
     },
     updateList: function() {
       this.ajax('getExternalID', this.ticket().id());
@@ -702,6 +696,13 @@
       }
     },
     switchToBulk: function() {
+      var newSubject = this.ticket().subject();
+      if (this.prependSubject) {
+        newSubject = 'Project-' + this.ticket().id() + ' ' + newSubject;
+      }
+      if (this.appendSubject) {
+        newSubject = newSubject + ' Project-' + this.ticket().id();
+      }
       var ticketType = this.getTicketTypes(this.setting('defaultTicketType') || this.ticket().type());
       //var ticketPri = this.setting('defaultTicketPriority' || this.ticket().priority());
       var currentForm = this.ticket().form().id();
@@ -719,7 +720,7 @@
         assigneeName: assigneeName,
         assigneeId: assigneeId,
         groups: this.groupDrop,
-        subject: this.ticket().subject(),
+        subject: newSubject,
         desc: this.ticket().description(),
         ticketType: ticketType
       });
